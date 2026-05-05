@@ -2,7 +2,16 @@
 @config "../../tailwind.config.ts";
 
 @layer base {
+  :root {
+    --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+
   body {
-    @apply bg-background text-text-primary font-sans antialiased;
+    @apply bg-background text-text-primary antialiased;
+    font-family: var(--font-sans);
+  }
+
+  * {
+    box-sizing: border-box;
   }
 }

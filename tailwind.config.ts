@@ -30,13 +30,6 @@ const config: Config = {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },
-      spacing: {
-        xs: "4px",
-        sm: "8px",
-        md: "16px",
-        lg: "24px",
-        xl: "32px",
-      },
       borderRadius: {
         sm: "6px",
         md: "8px",
