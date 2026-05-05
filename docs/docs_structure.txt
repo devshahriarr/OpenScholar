@@ -1,0 +1,14 @@
+/docs
+  /product
+    PRD.md
+  /requirements
+    SRS.md
+  /design
+    HLD.md
+    LLD.md
+  /engineering
+    coding-standards.md
+    best-practices.md
+    security-guidelines.md
+  /devops
+    deployment.md
