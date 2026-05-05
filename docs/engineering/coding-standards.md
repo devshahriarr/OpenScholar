@@ -95,19 +95,36 @@ API_TIMEOUT
 
 # 5. Project Structure
 
-/src  
-  /app  
-  /components  
-  /modules  
-    /auth  
-    /user  
-    /paper  
-    /admin  
-    /search  
-  /lib  
-  /utils  
-  /types  
-  /config  
+src/
+ ├── app/                 # Next.js routes (UI + API)
+ │   ├── api/
+ │   │   ├── auth/
+ │   │   ├── papers/
+ │   │   ├── search/
+ │   │   ├── comments/
+ │   │   ├── reactions/
+ │   │   └── admin/
+ │
+ ├── modules/             # 🔥 BUSINESS LOGIC (future NestJS ready)
+ │   ├── auth/
+ │   │   ├── service.ts
+ │   │   ├── repository.ts
+ │   │
+ │   ├── paper/
+ │   ├── user/
+ │   ├── search/
+ │   ├── engagement/
+ │   ├── moderation/
+ │   ├── analytics/
+ │   └── notification/
+ │
+ ├── lib/
+ │   ├── db.ts           # DB connection
+ │   ├── storage.ts      # MinIO/S3 logic
+ │   ├── auth.ts         # JWT/session
+ │
+ ├── types/
+ └── utils/
 
 ---
 
