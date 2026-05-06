@@ -9,8 +9,12 @@ model User {
   status          UserStatus @default(active)
   bio             String?
   profileImageUrl String?    @map("profile_image_url")
-  isVerified      Boolean    @default(false) @map("is_verified")
-  createdAt       DateTime   @default(now()) @map("created_at")
+  isVerified             Boolean    @default(false) @map("is_verified")
+  verificationToken      String?    @map("verification_token")
+  verificationTokenExpiry DateTime?  @map("verification_token_expiry")
+  resetToken            String?    @map("reset_token")
+  resetTokenExpiry      DateTime?  @map("reset_token_expiry")
+  createdAt              DateTime   @default(now()) @map("created_at")
 
   role       Role        @relation(fields: [roleId], references: [id])
   university University? @relation(fields: [universityId], references: [id])

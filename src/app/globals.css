@@ -1,17 +1,43 @@
 @import "tailwindcss";
-@config "../../tailwind.config.ts";
 
-@layer base {
-  :root {
-    --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+@theme {
+  --color-primary: #4F46E5;
+  --color-primary-hover: #4338CA;
+  --color-primary-light: #EEF2FF;
+  --color-secondary: #8B5CF6;
+  --color-secondary-hover: #7C3AED;
+  --color-background: #F9FAFB;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E7EB;
+  
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  
+  --shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-premium-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+:root {
+  --background: #F9FAFB;
+  --foreground: #111827;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-lg transition-all duration-200 font-medium shadow-sm active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary-hover text-white px-6 py-2.5 rounded-lg transition-all duration-200 font-medium shadow-sm active:scale-95;
   }
 
-  body {
-    @apply bg-background text-text-primary antialiased;
-    font-family: var(--font-sans);
-  }
-
-  * {
-    box-sizing: border-box;
+  .card-premium {
+    @apply bg-surface rounded-xl border border-border shadow-premium transition-shadow duration-300 hover:shadow-premium-hover;
   }
 }

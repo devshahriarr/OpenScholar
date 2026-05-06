@@ -15,33 +15,34 @@ export default function DashboardNav() {
         </Link>
 
         {/* Center links (desktop) */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-8">
           <Link href="/search" className="text-sm font-medium text-primary hover:text-primary-hover transition-colors">
             Home
           </Link>
-          <Link href="#" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
+          <Link href="/following" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
             Following
           </Link>
-          <Link href="#" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
+          <Link href="/my-uploads" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
             My Uploads
           </Link>
-          <Link href="#" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
+          <Link href="/saved" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
             Saved
           </Link>
         </nav>
 
         {/* Right actions */}
         <div className="flex items-center gap-4">
-          <button aria-label="Notifications" className="text-text-secondary hover:text-text-primary transition-colors">
+          <button aria-label="Notifications" className="p-2 text-text-secondary hover:bg-primary-light hover:text-primary rounded-full transition-all relative">
             <Bell className="h-5 w-5" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
           </button>
           
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-sm font-semibold">
+          <Link href="/profile" className="flex items-center gap-2 pl-2 border-l border-border hover:opacity-80 transition-opacity">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-sm font-semibold shadow-sm">
               J
             </div>
-            <span className="text-sm font-medium text-text-primary hidden sm:block">John Doe</span>
-          </div>
+            <span className="text-sm font-semibold text-text-primary hidden sm:block">John Doe</span>
+          </Link>
         </div>
       </div>
     </header>
