@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormInput } from "@/components/forms/FormInput";
 import { Button } from "@/components/ui/Button";
-import { loginUser } from "@/modules/auth/service";
 import { LoginCredentials } from "@/types/auth";
 
 interface FormErrors {
@@ -33,6 +32,10 @@ function validateLoginForm(data: LoginCredentials): FormErrors {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/search";
+  const verified = searchParams.get("verified") === "true";
+
   const [formData, setFormData] = useState<LoginCredentials>({ email: "", password: "" });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -60,12 +63,24 @@ export default function LoginPage() {
     setServerError(null);
 
     try {
-      const response = await loginUser(formData);
-      // Store token securely
-      localStorage.setItem("accessToken", response.accessToken);
-      router.push("/dashboard");
-    } catch (err) {
-      setServerError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setServerError(data.message || "Login failed. Please check your credentials.");
+        return;
+      }
+
+      // Token is set via httpOnly cookie by the server — no localStorage
+      router.push(redirect);
+      router.refresh();
+    } catch {
+      setServerError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +93,13 @@ export default function LoginPage() {
         <h1 className="text-2xl font-semibold text-text-primary">Welcome back</h1>
         <p className="text-sm text-text-secondary">Sign in to your OpenScholar account</p>
       </div>
+
+      {/* Email verified banner */}
+      {verified && (
+        <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          ✓ Email verified successfully! You can now log in.
+        </div>
+      )}
 
       {/* Server error */}
       {serverError && (

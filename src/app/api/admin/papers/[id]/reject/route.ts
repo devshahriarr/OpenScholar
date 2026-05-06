@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 
 export async function POST(
   req: Request,
@@ -8,7 +8,7 @@ export async function POST(
   try {
     const paper = await prisma.paper.update({
       where: { id: params.id },
-      data: { status: "REJECTED" }
+      data: { status: "rejected" }
     });
 
     return NextResponse.json(paper);

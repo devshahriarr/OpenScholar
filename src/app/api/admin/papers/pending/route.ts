@@ -1,21 +1,15 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 
 export async function GET() {
   try {
     const pendingPapers = await prisma.paper.findMany({
-      where: { status: "PENDING" },
+      where: { status: "pending" },
       include: {
         category: true,
-        author: {
-          include: {
-            user: true
-          }
-        },
+        category: true,
         tags: {
-          include: {
-            tag: true
-          }
+          include: { tag: true }
         }
       },
       orderBy: { createdAt: "desc" }
