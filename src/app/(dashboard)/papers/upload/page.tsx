@@ -16,8 +16,68 @@ export default function PaperUploadPage() {
     coAuthors: "",
   });
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 4));
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleNext = () => {
+    if (step === 1) {
+      if (!file) {
+        setError("Please upload a file first.");
+        return;
+      }
+      setError(null);
+      setStep(2);
+    } else if (step === 2) {
+      if (!formData.title.trim() || !formData.abstract.trim() || !formData.category) {
+        setError("Please fill in all required fields (*).");
+        return;
+      }
+      setError(null);
+      setStep(3);
+    }
+  };
+
+  const prevStep = () => {
+    setError(null);
+    setStep((s) => Math.max(s - 1, 1));
+  };
+
+  const handleSubmit = async () => {
+    if (!file) {
+      setError("Please select a file.");
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const data = new FormData();
+      data.append("file", file);
+      data.append("title", formData.title);
+      data.append("abstract", formData.abstract);
+      data.append("category", formData.category || "Computer Science");
+      data.append("keywords", formData.keywords);
+      data.append("coAuthors", formData.coAuthors);
+
+      const res = await fetch("/api/papers", {
+        method: "POST",
+        body: data,
+      });
+
+      const responseData = await res.json();
+
+      if (!res.ok) {
+        throw new Error(responseData.error || responseData.message || "Failed to upload paper.");
+      }
+
+      setStep(4);
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
@@ -136,11 +196,15 @@ export default function PaperUploadPage() {
                   <div className="space-y-2 text-sm">
                     <p className="flex items-center gap-2 text-text-secondary">
                       <span className="font-bold w-20">Authors:</span> 
-                      <span>John Doe {formData.coAuthors && `, ${formData.coAuthors}`}</span>
+                      <span>You (Main Author){formData.coAuthors ? `, ${formData.coAuthors}` : ""}</span>
                     </p>
                     <p className="flex items-center gap-2 text-text-secondary">
                       <span className="font-bold w-20">Category:</span> 
-                      <span>{formData.category || "Not specified"}</span>
+                      <span>
+                        {formData.category === "cs" ? "Computer Science" : 
+                         formData.category === "env" ? "Environmental Science" : 
+                         formData.category === "physics" ? "Physics" : "Not specified"}
+                      </span>
                     </p>
                     <p className="flex items-center gap-2 text-text-secondary">
                       <span className="font-bold w-20">Keywords:</span> 
@@ -161,6 +225,7 @@ export default function PaperUploadPage() {
                   Please review all details carefully before submitting. Your paper will undergo peer review before being published.
                 </p>
               </div>
+              {/* Error moved to bottom for all steps */}
             </div>
           </div>
         )}
@@ -190,23 +255,30 @@ export default function PaperUploadPage() {
 
         {/* Action Buttons */}
         {step < 4 && (
-          <div className="mt-12 pt-8 border-t border-border flex items-center justify-between">
-            <button 
-              onClick={prevStep}
-              disabled={step === 1}
-              className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold border border-border text-text-secondary hover:bg-background transition-all disabled:opacity-0"
-            >
-              <ChevronLeft size={20} />
-              Previous
-            </button>
-            <button 
-              onClick={nextStep}
-              disabled={step === 1 && !file}
-              className="flex items-center gap-2 px-10 py-3 rounded-xl font-bold bg-gradient-to-r from-primary to-secondary text-white shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
-            >
-              {step === 3 ? "Submit" : "Next"}
-              {step < 3 && <ChevronRight size={20} />}
-            </button>
+          <div className="mt-12 space-y-4">
+            {error && (
+              <div className="bg-red-50 px-4 py-3 border border-red-100 rounded-xl">
+                <p className="text-sm font-medium text-red-600">{error}</p>
+              </div>
+            )}
+            <div className="pt-8 border-t border-border flex items-center justify-between">
+              <button 
+                onClick={prevStep}
+                disabled={step === 1}
+                className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold border border-border text-text-secondary hover:bg-background transition-all disabled:opacity-0"
+              >
+                <ChevronLeft size={20} />
+                Previous
+              </button>
+              <button 
+                onClick={step === 3 ? handleSubmit : handleNext}
+                disabled={(step === 1 && !file) || isLoading}
+                className="flex items-center gap-2 px-10 py-3 rounded-xl font-bold bg-gradient-to-r from-primary to-secondary text-white shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+              >
+                {isLoading ? "Submitting..." : step === 3 ? "Submit" : "Next"}
+                {step < 3 && <ChevronRight size={20} />}
+              </button>
+            </div>
           </div>
         )}
       </div>
