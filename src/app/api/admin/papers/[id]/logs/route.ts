@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { approvePaper } from "@/modules/moderation/repository";
+import { getModerationLogs } from "@/modules/moderation/repository";
 import { getAdminUser } from "@/lib/admin-auth";
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const adminUser = await getAdminUser(req);
     if (!adminUser) {
@@ -10,14 +10,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     const { id } = await params;
-    await approvePaper(id, adminUser.sub);
+    const logs = await getModerationLogs(id);
 
-    return NextResponse.json({ message: "Paper approved successfully" });
+    return NextResponse.json(logs);
   } catch (error: any) {
-    console.error("[ADMIN_APPROVE_PAPER]", error);
+    console.error("[ADMIN_MODERATION_LOGS]", error);
     return NextResponse.json(
       { message: error.message || "Internal server error" }, 
-      { status: error.message === "Paper not found" ? 404 : 500 }
+      { status: 500 }
     );
   }
 }
