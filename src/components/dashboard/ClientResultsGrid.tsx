@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SearchResponse } from "@/modules/search/service";
+import { SearchResponse } from "@/modules/search/repository";
 import PaperCard from "@/components/landing/PaperCard";
 import PaperCardSkeleton from "@/components/landing/PaperCardSkeleton";
 import { Button } from "@/components/ui/Button";
