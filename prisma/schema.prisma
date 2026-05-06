@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+  output          = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PaperStatus {
+  draft
+  pending
+  approved
+  rejected
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum ReactionType {
+  like
+  love
+}
+
+enum ModerationAction {
+  approved
+  rejected
+}
+
+enum AnalyticsEventType {
+  view
+  download
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+
+  users User[]
+
+  @@map("roles")
+}
+
+model University {
+  id          Int          @id @default(autoincrement())
+  name        String
+  departments Department[]
+  users       User[]
+
+  @@map("universities")
+}
+
+model Department {
+  id           Int @id @default(autoincrement())
+  universityId Int? @map("university_id")
+  name         String
+
+  university University? @relation(fields: [universityId], references: [id])
+
+  users User[]
+
+  @@map("departments")
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+
+  papers Paper[]
+
+  @@map("categories")
+}

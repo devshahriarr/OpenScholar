@@ -1,0 +1,44 @@
+model Paper {
+  id            String      @id @default(uuid())
+  categoryId    Int         @map("category_id")
+  status        PaperStatus @default(draft)
+  commentCount  Int         @default(0) @map("comment_count")
+  reactionCount Int         @default(0) @map("reaction_count")
+  createdBy     String      @map("created_by")
+  isDeleted     Boolean     @default(false) @map("is_deleted")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  category Category @relation(fields: [categoryId], references: [id])
+  creator  User     @relation(fields: [createdBy], references: [id])
+
+  versions        PaperVersion[]
+  comments        Comment[]
+  reactions       Reaction[]
+  metrics         PaperMetrics?
+  moderationLogs  ModerationLog[]
+  savedBy         SavedPaper[]
+  analyticsEvents AnalyticsEvent[]
+
+  tags PaperTag[]
+
+  @@map("papers")
+}
+
+model PaperVersion {
+  id            String   @id @default(uuid())
+  paperId       String   @map("paper_id")
+  versionNumber Int      @map("version_number")
+  title         String
+  abstract      String
+  keywords      String[]
+  pdfUrl        String   @map("pdf_url")
+  isPublished   Boolean  @default(false) @map("is_published")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  paper Paper @relation(fields: [paperId], references: [id])
+
+  authors PaperAuthor[]
+
+  @@unique([paperId, versionNumber])
+  @@map("paper_versions")
+}

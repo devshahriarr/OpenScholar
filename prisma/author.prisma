@@ -1,0 +1,27 @@
+model Author {
+  id             String @id @default(uuid())
+  name           String
+  normalizedName String? @map("normalized_name")
+  userId         String? @unique @map("user_id")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  papers PaperAuthor[]
+
+  @@index([userId])
+  @@index([normalizedName])
+  @@map("authors")
+}
+
+model PaperAuthor {
+  paperVersionId String @map("paper_version_id")
+  authorId       String @map("author_id")
+  authorOrder    Int @map("author_order")
+
+  paperVersion PaperVersion @relation(fields: [paperVersionId], references: [id])
+  author       Author       @relation(fields: [authorId], references: [id])
+
+  @@id([paperVersionId, authorId])
+  @@unique([paperVersionId, authorOrder])
+  @@map("paper_authors")
+}

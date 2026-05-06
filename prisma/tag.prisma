@@ -1,0 +1,20 @@
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  papers PaperTag[]
+
+  @@map("tags")
+}
+
+model PaperTag {
+  paperId String @map("paper_id")
+  tagId   Int    @map("tag_id")
+
+  paper Paper @relation(fields: [paperId], references: [id])
+  tag   Tag   @relation(fields: [tagId], references: [id])
+
+  @@id([paperId, tagId])
+  @@index([tagId])
+  @@map("paper_tags")
+}

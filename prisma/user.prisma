@@ -1,0 +1,33 @@
+model User {
+  id              String     @id @default(uuid())
+  name            String
+  email           String     @unique
+  passwordHash    String     @map("password_hash")
+  roleId          Int        @map("role_id")
+  universityId    Int?       @map("university_id")
+  departmentId    Int?       @map("department_id")
+  status          UserStatus @default(active)
+  bio             String?
+  profileImageUrl String?    @map("profile_image_url")
+  isVerified      Boolean    @default(false) @map("is_verified")
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  role       Role        @relation(fields: [roleId], references: [id])
+  university University? @relation(fields: [universityId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  papers         Paper[]
+  comments       Comment[]
+  reactions      Reaction[]
+  notifications  Notification[]
+  moderationLogs ModerationLog[]
+  analyticsEvents AnalyticsEvent[]
+  author          Author?
+
+  followers Follower[] @relation("followers")
+  following Follower[] @relation("following")
+
+  savedPapers SavedPaper[]
+
+  @@map("users")
+}

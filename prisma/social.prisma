@@ -1,0 +1,24 @@
+model SavedPaper {
+  userId   String   @map("user_id")
+  paperId  String   @map("paper_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User  @relation(fields: [userId], references: [id])
+  paper Paper @relation(fields: [paperId], references: [id])
+
+  @@id([userId, paperId])
+  @@map("saved_papers")
+}
+
+model Follower {
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  follower  User @relation("followers", fields: [followerId], references: [id])
+  following User @relation("following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+  @@map("followers")
+}
