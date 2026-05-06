@@ -10,8 +10,38 @@ Before writing any code:
 1. Read all documentation inside the /docs folder:
    - /docs/product/PRD.md
    - /docs/requirements/SRS.md
-   - /docs/design/architecture/HLD.md
-   - /docs/design/LLD.md
+   - /docs/design/architecture/HLD/HLD.md
+   - /docs/design/architecture/HLD/DDLC_architecture.md
+
+   - /docs/design/architecture/LLD/lld_user.md
+   - /docs/design/architecture/LLD/lld_auth.md
+   - /docs/design/architecture/LLD/lld_moderation.md
+   - /docs/design/architecture/LLD/lld_analytics.md
+   - /docs/design/architecture/LLD/lld_author.md
+   - /docs/design/architecture/LLD/lld_paper.md
+   - /docs/design/architecture/LLD/lld_notification.md
+   - /docs/design/architecture/LLD/lld_saved_module.md
+   - /docs/design/architecture/LLD/lld_storage.md
+   - /docs/design/architecture/LLD/lld_search.md
+   - /docs/design/architecture/LLD/lld_engagement.md
+
+   - /docs/design/architecture/LLD/lld_user.pdf
+   - /docs/design/architecture/LLD/lld_auth.pdf
+   - /docs/design/architecture/LLD/lld_moderation.pdf
+   - /docs/design/architecture/LLD/lld_analytics.pdf
+   - /docs/design/architecture/LLD/lld_author.pdf
+   - /docs/design/architecture/LLD/lld_paper.pdf
+   - /docs/design/architecture/LLD/lld_notification.pdf
+   - /docs/design/architecture/LLD/lld_saved_module.pdf
+   - /docs/design/architecture/LLD/lld_storage.pdf
+   - /docs/design/architecture/LLD/lld_search.pdf
+   - /docs/design/architecture/LLD/lld_engagement.pdf
+   - /docs/design/architecture/DB/ERD.pdf
+   - /docs/design/architecture/DB/ERD.png
+   - /docs/design/architecture/DB/ERD.txt
+   - /docs/design/architecture/figma/OpenScholar.pdf
+
+
    - /docs/engineering/coding-standards.md (MANDATORY)
    - /docs/engineering/best-practices.md (MANDATORY)
    - /docs/engineering/security-guidelines.md (MANDATORY)
