@@ -47,3 +47,14 @@ export async function extractTokenFromHeader(authHeader: string | null): Promise
   const token = authHeader.substring(7);
   return verifyToken(token);
 }
+
+/**
+ * Gets the current user session from cookies.
+ */
+export async function getSessionUser(): Promise<JwtPayload | null> {
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
+  if (!token) return null;
+  return verifyToken(token);
+}

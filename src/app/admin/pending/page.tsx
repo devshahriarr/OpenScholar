@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Clock, 
   CheckCircle2, 
@@ -9,53 +9,71 @@ import {
   Filter,
   Eye,
   Slash,
-  User,
-  Building2,
-  Calendar,
   FileText,
-  Bookmark
+  Bookmark,
+  Loader2
 } from "lucide-react";
 import { AdminStatCard } from "@/components/admin/stat-card";
+import { PaperReviewModal } from "@/components/admin/paper-review-modal";
 import { clsx } from "clsx";
 
-const PENDING_PAPERS = [
-  { 
-    id: "1", 
-    author: "Robert Chan", 
-    institution: "MIT",
-    category: "Computer Science", 
-    title: "Quantum Machine Learning for Financial Prediction", 
-    abstract: "This paper explores the application of quantum computing principles to enhance machine learning models for financial market prediction. We propose a hybrid quantum-classical architecture that significantly reduces training time while maintaining high accuracy...",
-    keywords: ["AI", "Deep Learning", "NLP", "Quantum"], 
-    submitted: "2 hours ago",
-    status: "pending" 
-  },
-  { 
-    id: "2", 
-    author: "Robert Chan", 
-    institution: "Stanford",
-    category: "Environmental Science", 
-    title: "Deep learning applications in natural disaster mitigation", 
-    abstract: "Recent advancements in deep learning have opened new avenues for natural disaster prediction and mitigation. This study evaluates the efficacy of convolutional neural networks in processing satellite imagery for real-time flood monitoring...",
-    keywords: ["AI", "Deep Learning", "NLP"], 
-    submitted: "5 hours ago",
-    status: "pending" 
-  },
-  { 
-    id: "3", 
-    author: "Robert Chan", 
-    institution: "Harvard",
-    category: "Computer Science", 
-    title: "Machine learning for finance: A comprehensive survey", 
-    abstract: "The financial sector is undergoing a massive transformation driven by machine learning algorithms. This survey provides a systematic overview of the current state-of-the-art techniques in algorithmic trading, risk management, and fraud detection...",
-    keywords: ["AI", "Deep Learning", "NLP"], 
-    submitted: "1 day ago",
-    status: "pending" 
-  },
-];
-
 export default function PendingApprovalsPage() {
+  const [papers, setPapers] = useState<any[]>([]);
+  const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedPaper, setSelectedPaper] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/admin/pending");
+      if (res.ok) {
+        const data = await res.json();
+        setPapers(data.papers);
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error("Failed to fetch pending papers:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleModerate = async (paperId: string, action: "approved" | "rejected") => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/api/admin/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paperId, action }),
+      });
+
+      if (res.ok) {
+        setSelectedPaper(null);
+        await fetchData(); // Refresh list and stats
+      } else {
+        const data = await res.json();
+        alert(data.message || "Failed to moderate paper");
+      }
+    } catch (error) {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -66,44 +84,48 @@ export default function PendingApprovalsPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <AdminStatCard label="Pending Review" value="5" trend="+1" icon={Clock} color="warning" />
-        <AdminStatCard label="Approved" value="0" trend="0" icon={CheckCircle2} color="success" />
-        <AdminStatCard label="Rejected" value="0" trend="0" icon={XCircle} color="warning" />
+        <AdminStatCard label="Pending Review" value={stats.pending.toString()} trend="+1" icon={Clock} color="warning" />
+        <AdminStatCard label="Approved" value={stats.approved.toString()} trend="0" icon={CheckCircle2} color="success" />
+        <AdminStatCard label="Rejected" value={stats.rejected.toString()} trend="0" icon={XCircle} color="warning" />
       </div>
 
       {/* Filter Bar */}
-      <div className="card-premium p-4 flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white shadow-sm rounded-2xl border border-gray-100 p-4 flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input 
             type="text" 
             placeholder="Search by title or author..." 
-            className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary transition-all"
           />
         </div>
         <div className="flex gap-4 w-full md:w-auto">
-          <button className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-border text-sm font-bold text-text-secondary hover:bg-background transition-all">
+          <button className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all">
             <Filter size={18} />
             All Categories
-            <Slash size={14} className="rotate-[110deg] opacity-20" />
           </button>
         </div>
       </div>
 
       {/* Table Section */}
-      <div className="card-premium overflow-hidden">
-        <div className="p-6 bg-primary-light/30 border-b border-border flex justify-between items-center">
-          <div className="grid grid-cols-5 w-full text-[11px] font-extrabold text-text-secondary uppercase tracking-widest px-4">
+      <div className="bg-white shadow-sm rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="p-6 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+          <div className="grid grid-cols-6 w-full text-[11px] font-extrabold text-gray-500 uppercase tracking-widest px-4">
             <span>Author Name</span>
             <span>Category</span>
             <span>Title</span>
             <span>Keyword</span>
+            <span>Status</span>
             <span className="text-right">Action</span>
           </div>
         </div>
-        <div className="divide-y divide-border">
-          {PENDING_PAPERS.map((paper) => (
-            <div key={paper.id} className="grid grid-cols-5 items-center p-6 px-10 hover:bg-background transition-colors">
+        <div className="divide-y divide-gray-100">
+          {papers.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">
+              No pending papers found.
+            </div>
+          ) : papers.map((paper) => (
+            <div key={paper.id} className="grid grid-cols-6 items-center p-6 px-10 hover:bg-gray-50/50 transition-colors">
               <span className="text-sm font-bold text-text-primary">{paper.author}</span>
               <div>
                 <span className={clsx(
@@ -115,23 +137,38 @@ export default function PendingApprovalsPage() {
               </div>
               <span className="text-sm font-bold text-text-primary truncate pr-8">{paper.title}</span>
               <div className="flex gap-1">
-                {paper.keywords.slice(0, 3).map((k) => (
-                  <span key={k} className="text-[9px] font-bold text-text-muted bg-background border border-border px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                {paper.keywords.slice(0, 3).map((k: string) => (
+                  <span key={k} className="text-[9px] font-bold text-gray-400 bg-white border border-gray-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
                     {k}
                   </span>
                 ))}
               </div>
+              <span className={clsx(
+                "text-[10px] font-bold px-3 py-1 rounded uppercase w-fit",
+                paper.status === "pending" && "bg-yellow-100 text-yellow-600",
+                paper.status === "approved" && "bg-green-100 text-green-600",
+                paper.status === "rejected" && "bg-red-100 text-red-600",
+                paper.status === "draft" && "bg-gray-100 text-gray-600"
+              )}>
+                {paper.status}
+              </span>
               <div className="flex items-center justify-end gap-3">
                 <button 
                   onClick={() => setSelectedPaper(paper)}
-                  className="text-text-muted hover:text-primary transition-colors p-1.5 hover:bg-primary-light rounded-lg"
+                  className="text-gray-400 hover:text-primary transition-colors p-1.5 hover:bg-primary/5 rounded-lg"
                 >
                   <Eye size={18} />
                 </button>
-                <button className="text-text-muted hover:text-green-600 transition-colors p-1.5 hover:bg-green-50 rounded-lg">
+                <button 
+                  onClick={() => handleModerate(paper.id, "approved")}
+                  className="text-gray-400 hover:text-green-600 transition-colors p-1.5 hover:bg-green-50 rounded-lg"
+                >
                   <CheckCircle2 size={18} />
                 </button>
-                <button className="text-text-muted hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg">
+                <button 
+                  onClick={() => handleModerate(paper.id, "rejected")}
+                  className="text-gray-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg"
+                >
                   <XCircle size={18} />
                 </button>
               </div>
@@ -141,84 +178,13 @@ export default function PendingApprovalsPage() {
       </div>
 
       {/* Paper Review Modal */}
-      {selectedPaper && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-surface rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-8 relative">
-              <button 
-                onClick={() => setSelectedPaper(null)}
-                className="absolute top-6 right-6 p-2 text-text-muted hover:bg-background rounded-full transition-all"
-              >
-                <XCircle size={24} />
-              </button>
-
-              <div className="mb-8">
-                <span className="bg-blue-100 text-blue-600 text-[10px] font-extrabold px-3 py-1 rounded uppercase tracking-widest mb-3 inline-block">
-                  {selectedPaper.category}
-                </span>
-                <h3 className="text-2xl font-extrabold text-text-primary tracking-tight leading-snug">
-                  {selectedPaper.title}
-                </h3>
-              </div>
-
-              <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                <div>
-                  <h4 className="text-sm font-bold text-text-primary mb-2 uppercase tracking-wider flex items-center gap-2">
-                    <FileText size={16} className="text-primary" />
-                    Abstract
-                  </h4>
-                  <p className="text-text-secondary text-sm leading-relaxed">
-                    {selectedPaper.abstract}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-bold text-text-primary mb-2 uppercase tracking-wider flex items-center gap-2">
-                    <Bookmark size={16} className="text-primary" />
-                    Keywords
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedPaper.keywords.map((k: string) => (
-                      <span key={k} className="text-[10px] font-bold text-text-muted bg-background border border-border px-3 py-1 rounded uppercase">
-                        {k}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-6 border-t border-border">
-                  <h4 className="text-sm font-bold text-text-primary mb-4 uppercase tracking-wider">Author Information</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm font-medium">
-                    <p className="flex items-center gap-2 text-text-secondary">
-                      <span className="font-bold w-12 text-text-muted">Name:</span> 
-                      <span className="text-text-primary">{selectedPaper.author}</span>
-                    </p>
-                    <p className="flex items-center gap-2 text-text-secondary">
-                      <span className="font-bold w-20 text-text-muted">Institution:</span> 
-                      <span className="text-text-primary">{selectedPaper.institution}</span>
-                    </p>
-                    <p className="flex items-center gap-2 text-text-secondary">
-                      <span className="font-bold w-12 text-text-muted">Submitted:</span> 
-                      <span className="text-text-primary">{selectedPaper.submitted}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-10 flex gap-4">
-                <button className="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
-                  <CheckCircle2 size={20} />
-                  Approve Paper
-                </button>
-                <button className="flex-1 bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center gap-2">
-                  <XCircle size={20} />
-                  Reject Paper
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <PaperReviewModal 
+        paper={selectedPaper} 
+        onClose={() => setSelectedPaper(null)} 
+        onApprove={(id) => handleModerate(id, "approved")}
+        onReject={(id) => handleModerate(id, "rejected")}
+        isProcessing={isProcessing}
+      />
     </div>
   );
 }

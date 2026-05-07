@@ -1,38 +1,35 @@
 import { Bookmark } from "lucide-react";
 import { PaperCard } from "@/components/paper-card";
+import { getSessionUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getSavedPapers } from "@/modules/engagement/repository";
 
-const MOCK_SAVED = [
-  {
-    id: "1",
-    commentCount: 24,
-    reactionCount: 156,
-    createdAt: new Date().toISOString(),
-    category: { name: "Computer Science" },
-    creator: { name: "Sarah Johnson" },
-    versions: [{
-      title: "Deep Learning Applications in Natural Language Processing",
-      abstract: "This thesis explores the recent advancements in deep learning techniques applied to natural language processing tasks, including transformer models and attention mechanisms.",
-      keywords: ["AI", "Deep Learning", "NLP"]
-    }],
-    metrics: { viewCount: 1245, downloadCount: 342 }
-  },
-  {
-    id: "2",
-    commentCount: 12,
-    reactionCount: 89,
-    createdAt: new Date().toISOString(),
-    category: { name: "Environmental Science" },
-    creator: { name: "Mark Wilson" },
-    versions: [{
-      title: "Machine Learning for Climate Change Prediction",
-      abstract: "An investigation into how machine learning algorithms can be applied to predict climate patterns and assess environmental impacts globally.",
-      keywords: ["Machine Learning", "Climate", "Data Analysis"]
-    }],
-    metrics: { viewCount: 2134, downloadCount: 567 }
+export default async function SavedPage() {
+  const user = await getSessionUser();
+  if (!user) {
+    redirect("/auth/login");
   }
-];
 
-export default function SavedPage() {
+  const savedPapers = await getSavedPapers(user.sub);
+
+  const formattedPapers = savedPapers.map(paper => ({
+    id: paper.id,
+    commentCount: paper.commentCount,
+    reactionCount: paper.reactionCount,
+    createdAt: paper.createdAt.toISOString(),
+    category: paper.category,
+    creator: { name: paper.creator.name },
+    versions: paper.versions.map(v => ({
+      title: v.title,
+      abstract: v.abstract,
+      keywords: v.keywords
+    })),
+    metrics: { 
+      viewCount: paper.metrics?.views || 0, 
+      downloadCount: paper.metrics?.downloads || 0 
+    }
+  }));
+
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
       <div className="flex items-center gap-3 mb-2">
@@ -41,13 +38,21 @@ export default function SavedPage() {
         </div>
         <h1 className="text-2xl font-bold text-text-primary">Saved Thesis</h1>
       </div>
-      <p className="text-text-secondary text-sm mb-8">Your bookmarked research papers ({MOCK_SAVED.length * 4})</p>
+      <p className="text-text-secondary text-sm mb-8">Your bookmarked research papers ({formattedPapers.length})</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {[...MOCK_SAVED, ...MOCK_SAVED, ...MOCK_SAVED, ...MOCK_SAVED].map((paper, idx) => (
-          <PaperCard key={idx} paper={paper} />
-        ))}
-      </div>
+      {formattedPapers.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {formattedPapers.map((paper) => (
+            <PaperCard key={paper.id} paper={paper as any} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-24 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+          <Bookmark size={48} className="text-gray-300 mb-4" />
+          <p className="text-gray-500 font-medium">You haven&apos;t saved any papers yet.</p>
+          <p className="text-gray-400 text-sm mt-1">Start exploring and save your favorite research!</p>
+        </div>
+      )}
     </div>
   );
 }

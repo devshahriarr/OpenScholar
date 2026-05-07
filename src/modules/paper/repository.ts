@@ -57,3 +57,55 @@ export async function getPapersByUserId(userId: string) {
     },
   });
 }
+export async function getAllCategories() {
+  return prisma.category.findMany({
+    orderBy: { name: "asc" },
+  });
+}
+
+export async function getPaperById(id: string) {
+  try {
+    return await prisma.paper.findUnique({
+      where: { id, isDeleted: false },
+      include: {
+        category: true,
+        creator: {
+          include: {
+            author: true,
+          },
+        },
+        versions: {
+          orderBy: { versionNumber: "desc" },
+        },
+        metrics: true,
+      },
+    });
+  } catch (error) {
+    console.error(`[REPOSITORY_ERROR] Failed to fetch paper ${id}:`, error);
+    return null;
+  }
+}
+
+export async function getRelatedPapers(id: string, categoryId: number, limit: number = 3) {
+  return prisma.paper.findMany({
+    where: {
+      categoryId,
+      id: { not: id },
+      isDeleted: false,
+    },
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      category: true,
+      creator: {
+        select: { name: true },
+      },
+      versions: {
+        orderBy: { versionNumber: "desc" },
+        take: 1,
+      },
+      metrics: true,
+    },
+  });
+}
+

@@ -1,15 +1,16 @@
 "use client";
 
-import { XCircle, FileText, Bookmark, CheckCircle2 } from "lucide-react";
+import { XCircle, FileText, Bookmark, CheckCircle2, Loader2 } from "lucide-react";
 
 interface PaperReviewModalProps {
   paper: any;
   onClose: () => void;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
+  isProcessing?: boolean;
 }
 
-export function PaperReviewModal({ paper, onClose, onApprove, onReject }: PaperReviewModalProps) {
+export function PaperReviewModal({ paper, onClose, onApprove, onReject, isProcessing }: PaperReviewModalProps) {
   if (!paper) return null;
 
   return (
@@ -78,17 +79,19 @@ export function PaperReviewModal({ paper, onClose, onApprove, onReject }: PaperR
 
           <div className="mt-10 flex gap-4">
             <button 
+              disabled={isProcessing}
               onClick={() => onApprove?.(paper.id)}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <CheckCircle2 size={20} />
+              {isProcessing ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
               Approve Paper
             </button>
             <button 
+              disabled={isProcessing}
               onClick={() => onReject?.(paper.id)}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <XCircle size={20} />
+              {isProcessing ? <Loader2 className="animate-spin" size={20} /> : <XCircle size={20} />}
               Reject Paper
             </button>
           </div>

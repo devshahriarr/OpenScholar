@@ -8,10 +8,12 @@ import {
   Eye, 
   CheckCircle2, 
   XCircle,
+  Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminStatCard } from "@/components/admin/stat-card";
 import { PaperReviewModal } from "@/components/admin/paper-review-modal";
+import { clsx } from "clsx";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
   PieChart, Pie, Cell
@@ -26,24 +28,84 @@ const GROWTH_DATA = [
   { name: 'Jun', total: 12450, new: 3542 },
 ];
 
-const CATEGORY_DATA = [
-  { name: 'Computer Science', value: 27, color: '#3B82F6' },
-  { name: 'Environmental Science', value: 22, color: '#10B981' },
-  { name: 'Biology', value: 17, color: '#F59E0B' },
-  { name: 'Chemistry', value: 14, color: '#8B5CF6' },
-  { name: 'Mathematics', value: 13, color: '#EC4899' },
-  { name: 'Others', value: 10, color: '#6B7280' },
-];
-
-const PENDING_PAPERS = [
-  { id: "1", author: "Robert Chan", category: "Computer Science", title: "Machine learning for finance", keywords: ["AI", "Deep Learning", "NLP"], status: "pending", abstract: "This paper explores the application of quantum computing principles to enhance machine learning models for financial market prediction." },
-  { id: "2", author: "Robert Chan", category: "Environmental Science", title: "Deep learning applications", keywords: ["AI", "Deep Learning", "NLP"], status: "pending", abstract: "Recent advancements in deep learning have opened new avenues for natural disaster prediction and mitigation." },
-  { id: "3", author: "Robert Chan", category: "Computer Science", title: "Machine learning for finance", keywords: ["AI", "Deep Learning", "NLP"], status: "pending", abstract: "The financial sector is undergoing a massive transformation driven by machine learning algorithms." },
-  { id: "4", author: "Robert Chan", category: "Environmental Science", title: "Deep learning applications", keywords: ["AI", "Deep Learning", "NLP"], status: "pending", abstract: "This study evaluates the efficacy of convolutional neural networks in processing satellite imagery." },
-];
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6B7280'];
 
 export default function AdminDashboard() {
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPaper, setSelectedPaper] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/admin/dashboard");
+      if (res.ok) {
+        const data = await res.json();
+        setData(data);
+      }
+    } catch (error) {
+      console.error("[DASHBOARD_FETCH_ERROR]", error);
+      setError("Failed to fetch dashboard data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleModerate = async (paperId: string, action: "approved" | "rejected") => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/api/admin/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paperId, action }),
+      });
+
+      if (res.ok) {
+        setSelectedPaper(null);
+        await fetchData(); // Refresh data
+      } else {
+        const errData = await res.json();
+        alert(errData.message || "Failed to moderate paper");
+      }
+    } catch (error) {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 bg-red-50 border border-red-100 rounded-3xl mx-auto max-w-2xl mt-12">
+        <XCircle className="h-16 w-16 text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold text-red-700 mb-2">Dashboard Error</h2>
+        <p className="text-red-600 mb-6">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 transition-all"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  const { stats, recentPapers } = data;
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-end">
@@ -55,9 +117,9 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <AdminStatCard label="Total Users" value="12,450" trend="+12%" icon={Users} color="primary" />
-        <AdminStatCard label="Total Papers" value="45,280" trend="+8%" icon={FileText} color="success" />
-        <AdminStatCard label="Pending Reviews" value="127" trend="-5%" icon={Clock} color="warning" />
+        <AdminStatCard label="Total Users" value={stats.totalUsers.toLocaleString()} trend="+12%" icon={Users} color="primary" />
+        <AdminStatCard label="Total Papers" value={stats.totalPapers.toLocaleString()} trend="+8%" icon={FileText} color="success" />
+        <AdminStatCard label="Pending Reviews" value={stats.pendingPapers.toLocaleString()} trend="-5%" icon={Clock} color="warning" />
         <AdminStatCard label="Active Today" value="3,542" trend="+18%" icon={Activity} color="purple" />
       </div>
 
@@ -86,14 +148,6 @@ export default function AdminDashboard() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-center gap-6 mt-6">
-             <div className="flex items-center gap-2 text-xs font-bold text-text-secondary">
-               <div className="w-3 h-3 rounded-full bg-primary"></div> Total Users
-             </div>
-             <div className="flex items-center gap-2 text-xs font-bold text-text-secondary">
-               <div className="w-3 h-3 rounded-full bg-green-500"></div> New Users
-             </div>
-          </div>
         </div>
 
         <div className="lg:col-span-5 card-premium p-8">
@@ -105,14 +159,14 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={CATEGORY_DATA}
+                  data={stats.categoryDistribution}
                   innerRadius={60}
                   outerRadius={100}
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {CATEGORY_DATA.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {stats.categoryDistribution.map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -120,13 +174,13 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4">
-            {CATEGORY_DATA.map((cat) => (
+            {stats.categoryDistribution.map((cat: any, index: number) => (
               <div key={cat.name} className="flex items-center justify-between text-[10px] font-bold">
                 <div className="flex items-center gap-2 text-text-secondary">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }}></div>
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
                   {cat.name}
                 </div>
-                <span className="text-text-primary">{cat.value}%</span>
+                <span className="text-text-primary">{cat.value}</span>
               </div>
             ))}
           </div>
@@ -136,41 +190,51 @@ export default function AdminDashboard() {
       {/* Table Section */}
       <div className="card-premium overflow-hidden">
         <div className="p-6 bg-primary-light/30 border-b border-border flex justify-between items-center">
-          <div className="grid grid-cols-5 w-full text-[11px] font-extrabold text-text-secondary uppercase tracking-widest px-4">
+          <div className="flex flex-col">
+            <h3 className="text-lg font-bold text-text-primary">Recent Submissions</h3>
+            <p className="text-xs font-bold text-text-muted mt-1 uppercase tracking-widest">Latest research activities</p>
+          </div>
+        </div>
+        <div className="p-6 bg-gray-50/50 border-b border-border">
+          <div className="grid grid-cols-6 w-full text-[11px] font-extrabold text-text-secondary uppercase tracking-widest px-4">
             <span>Author Name</span>
             <span>Category</span>
             <span>Title</span>
             <span>Keyword</span>
+            <span>Status</span>
             <span className="text-right">Action</span>
           </div>
         </div>
         <div className="divide-y divide-border">
-          {PENDING_PAPERS.map((paper) => (
-            <div key={paper.id} className="grid grid-cols-5 items-center p-6 px-10 hover:bg-background transition-colors">
+          {recentPapers.map((paper: any) => (
+            <div key={paper.id} className="grid grid-cols-6 items-center p-6 px-10 hover:bg-background transition-colors">
               <span className="text-sm font-bold text-text-primary">{paper.author}</span>
               <span className="text-[10px] font-bold text-primary bg-primary-light px-2 py-1 rounded w-fit uppercase">
                 {paper.category}
               </span>
               <span className="text-sm font-bold text-text-primary truncate pr-8">{paper.title}</span>
               <div className="flex gap-1">
-                {paper.keywords.slice(0, 2).map((k) => (
+                {paper.keywords.slice(0, 2).map((k: string) => (
                   <span key={k} className="text-[9px] font-bold text-text-muted bg-background border border-border px-1.5 py-0.5 rounded uppercase tracking-tighter">
                     {k}
                   </span>
                 ))}
               </div>
+              <span className={clsx(
+                "text-[10px] font-bold px-2 py-1 rounded w-fit uppercase",
+                paper.status === "pending" && "bg-yellow-100 text-yellow-700",
+                paper.status === "approved" && "bg-green-100 text-green-700",
+                paper.status === "rejected" && "bg-red-100 text-red-700",
+                paper.status === "draft" && "bg-gray-100 text-gray-700"
+              )}>
+                {paper.status}
+              </span>
               <div className="flex items-center justify-end gap-3">
                 <button 
                   onClick={() => setSelectedPaper(paper)}
                   className="text-text-muted hover:text-primary transition-colors p-1.5 hover:bg-primary-light rounded-lg"
                 >
                   <Eye size={18} />
-                </button>
-                <button className="text-text-muted hover:text-green-600 transition-colors p-1.5 hover:bg-green-50 rounded-lg">
-                  <CheckCircle2 size={18} />
-                </button>
-                <button className="text-text-muted hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg">
-                  <XCircle size={18} />
                 </button>
               </div>
             </div>
@@ -182,8 +246,9 @@ export default function AdminDashboard() {
       <PaperReviewModal 
         paper={selectedPaper} 
         onClose={() => setSelectedPaper(null)} 
-        onApprove={(id) => console.log("Approve", id)}
-        onReject={(id) => console.log("Reject", id)}
+        onApprove={(id) => handleModerate(id, "approved")}
+        onReject={(id) => handleModerate(id, "rejected")}
+        isProcessing={isProcessing}
       />
     </div>
   );

@@ -17,7 +17,7 @@ export default function DashboardNav() {
         {/* Center links (desktop) */}
         <nav className="hidden md:flex items-center gap-8">
           <Link href="/search" className="text-sm font-medium text-primary hover:text-primary-hover transition-colors">
-            Home
+            Discovery
           </Link>
           <Link href="/following" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
             Following

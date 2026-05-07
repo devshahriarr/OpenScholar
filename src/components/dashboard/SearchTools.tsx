@@ -5,19 +5,21 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-const CATEGORY_OPTIONS = [
-  { value: "1", label: "Science & Technology" },
-  { value: "2", label: "Arts & Humanities" },
-  { value: "3", label: "Business & Economics" },
-  { value: "4", label: "Health & Medicine" },
-];
-
 const YEAR_OPTIONS = ["2026", "2025", "2024", "2023", "2022"];
 
 export default function SearchTools() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  
+  useEffect(() => {
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(setCategories)
+      .catch(console.error);
+  }, []);
 
   // Local state for debounced search
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") ?? "");
@@ -89,9 +91,9 @@ export default function SearchTools() {
             className="block w-full rounded-md border border-border bg-transparent py-2 px-3 text-sm text-text-primary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
           >
             <option value="">Select Category</option>
-            {CATEGORY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
+            {categories.map((opt) => (
+              <option key={opt.id} value={opt.id.toString()}>
+                {opt.name}
               </option>
             ))}
           </select>

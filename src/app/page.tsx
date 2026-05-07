@@ -5,8 +5,17 @@ import StatsBar from "@/components/landing/StatsBar";
 import FeaturedPapers from "@/components/landing/FeaturedPapers";
 import MethodologySection from "@/components/landing/MethodologySection";
 import CTASection from "@/components/landing/CTASection";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token");
+
+  if (token) {
+    redirect("/search");
+  }
+
   return (
     <>
       <Navbar />

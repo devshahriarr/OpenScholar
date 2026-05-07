@@ -23,7 +23,6 @@ export async function searchPapers(filters: SearchFilters): Promise<SearchRespon
 
   // Build the Where clause
   const where: Prisma.PaperWhereInput = {
-    status: "approved",
     isDeleted: false,
   };
 
@@ -34,18 +33,12 @@ export async function searchPapers(filters: SearchFilters): Promise<SearchRespon
   if (q) {
     where.versions = {
       some: {
-        isPublished: true,
         OR: [
           { title: { contains: q, mode: "insensitive" } },
           { abstract: { contains: q, mode: "insensitive" } },
           { keywords: { has: q } },
         ],
       },
-    };
-  } else {
-    // Ensure we only get papers with published versions
-    where.versions = {
-      some: { isPublished: true },
     };
   }
 
@@ -77,7 +70,6 @@ export async function searchPapers(filters: SearchFilters): Promise<SearchRespon
           select: { name: true, id: true },
         },
         versions: {
-          where: { isPublished: true },
           orderBy: { versionNumber: "desc" },
           take: 1,
           include: {

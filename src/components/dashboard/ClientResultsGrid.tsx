@@ -19,17 +19,45 @@ function ResultsGridSkeleton() {
 export default function ClientResultsGrid({ searchParamsStr }: { searchParamsStr: string }) {
   const [data, setData] = useState<SearchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsLoading(true);
+    setError(null);
     fetch(`/api/search?${searchParamsStr}`)
-      .then(res => res.json())
+      .then(async res => {
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Failed to fetch research papers.");
+        }
+        return res.json();
+      })
       .then(setData)
-      .catch(console.error)
+      .catch((err) => {
+        console.error("[SEARCH_FETCH_ERROR]", err);
+        setError(err.message);
+      })
       .finally(() => setIsLoading(false));
   }, [searchParamsStr]);
 
   if (isLoading) return <ResultsGridSkeleton />;
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center rounded-xl border border-red-200 bg-red-50/50">
+        <h3 className="text-lg font-semibold text-red-700 mb-2">Search Error</h3>
+        <p className="text-sm text-red-600 max-w-sm">{error}</p>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   if (!data || data.results.length === 0) {
     return (

@@ -1,4 +1,5 @@
 import { Upload } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 export default function UploadBanner() {
@@ -17,10 +18,12 @@ export default function UploadBanner() {
       </div>
 
       <div className="relative z-10 flex-shrink-0">
-        <Button variant="secondary" size="md" className="gap-2 font-semibold shadow-sm">
-          <Upload className="h-4 w-4" />
-          Upload Thesis
-        </Button>
+        <Link href="/papers/upload">
+          <Button variant="secondary" size="md" className="gap-2 font-semibold shadow-sm">
+            <Upload className="h-4 w-4" />
+            Upload Thesis
+          </Button>
+        </Link>
       </div>
     </div>
   );

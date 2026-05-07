@@ -12,127 +12,316 @@ type ViewMode = "abstract" | "article" | "pdf";
 export default function PaperClientView({ 
   paper, 
   relatedPapers,
-  initialComments 
+  initialComments,
+  initialInteractions,
+  initialIsFollowing
 }: { 
   paper: PaperDetails;
   relatedPapers: PaperDetails[];
   initialComments: Comment[];
+  initialInteractions: { isLiked: boolean; isSaved: boolean };
+  initialIsFollowing: boolean;
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("abstract");
   const [comments, setComments] = useState(initialComments);
+  const [likes, setLikes] = useState(paper.metrics.likes);
+  const [isLiked, setIsLiked] = useState(initialInteractions.isLiked);
+  const [isSaved, setIsSaved] = useState(initialInteractions.isSaved);
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleLike = async () => {
+    // Optimistic update
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+    setLikes(prev => newLikedState ? prev + 1 : prev - 1);
+
+    try {
+      await fetch("/api/engagement/react", {
+        method: "POST",
+        body: JSON.stringify({ paperId: paper.id, type: "like" }),
+      });
+    } catch (error) {
+      // Revert on error
+      setIsLiked(!newLikedState);
+      setLikes(prev => !newLikedState ? prev + 1 : prev - 1);
+    }
+  };
+
+  const handleSave = async () => {
+    const newSavedState = !isSaved;
+    setIsSaved(newSavedState);
+
+    try {
+      await fetch("/api/engagement/save", {
+        method: "POST",
+        body: JSON.stringify({ paperId: paper.id }),
+      });
+    } catch (error) {
+      setIsSaved(!newSavedState);
+    }
+  };
+
+  const handleFollow = async () => {
+    const newFollowState = !isFollowing;
+    setIsFollowing(newFollowState);
+
+    try {
+      const res = await fetch("/api/engagement/follow", {
+        method: "POST",
+        body: JSON.stringify({ targetUserId: paper.authors[0].id }),
+      });
+      if (!res.ok) throw new Error("Failed to follow");
+    } catch (error: any) {
+      console.error("Follow error:", error);
+      alert(error.message || "Failed to follow researcher");
+      setIsFollowing(!newFollowState);
+    }
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: paper.title,
+        text: paper.abstract,
+        url: window.location.href,
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/engagement/comment", {
+        method: "POST",
+        body: JSON.stringify({ paperId: paper.id, content: newComment }),
+      });
+
+      if (res.ok) {
+        const comment = await res.json();
+        setComments([comment, ...comments]);
+        setNewComment("");
+      }
+    } catch (error) {
+      console.error("Failed to add comment", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Top Banner (Only visible in Article or PDF view) */}
-      {viewMode !== "abstract" && (
-        <div className="bg-surface border-b border-border py-3 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <p className="text-sm font-medium text-error">
-            The full paper is available for download. Click the &quot;Download PDF&quot; button above to access the complete manuscript.
-          </p>
-          <Button variant="primary" size="sm" className="gap-2">
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
+    <div className="flex flex-col min-h-screen bg-white w-full">
+      {/* Top Banner (Only visible in Article view) */}
+      {viewMode === "article" && (
+        <div className="w-full bg-[#F8F9FA] border-b border-border">
+          <div className="max-w-[1200px] mx-auto py-2.5 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <p className="text-[13px] font-medium text-[#FF4D4D]">
+              The full paper is available for download. Click the &quot;Download PDF&quot; button above to access the complete manuscript.
+            </p>
+            <Button variant="primary" size="sm" className="gap-2 bg-[#1A73E8] hover:bg-[#1557B0] text-white rounded-lg h-9">
+              <Download className="h-4 w-4" />
+              Download PDF
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* Main Two-Column Layout */}
-      <div className="flex-1 w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-8 lg:gap-12">
-        
-        {/* Left Column (Main Content) */}
-        <div className="flex-1 min-w-0 flex flex-col">
-          {/* Navigation & Actions */}
-          <div className="flex items-center justify-between mb-8">
-            <Link href="/search" className="text-text-secondary hover:text-text-primary transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            
-            {viewMode === "abstract" && (
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => setViewMode("article")}
-                  className="text-primary hover:text-primary-hover transition-colors"
-                >
-                  <BookOpen className="h-5 w-5" />
-                </button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2 font-medium"
-                  onClick={() => setViewMode("article")}
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Read Post
-                </Button>
-              </div>
+      {/* Navigation Header */}
+      <header className="w-full border-b border-transparent">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+          <button 
+            onClick={() => {
+              if (viewMode !== "abstract") {
+                setViewMode("abstract");
+              } else {
+                window.location.href = "/search";
+              }
+            }}
+            className="p-2 -ml-2 text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          
+          <div className="flex items-center gap-4">
+          {/* New Book Icon from Image 2 to trigger PDF view */}
+          <button 
+            onClick={() => setViewMode("pdf")}
+            className={cn(
+              "p-2 rounded-full transition-colors",
+              viewMode === "pdf" ? "bg-primary/10 text-primary" : "text-primary hover:bg-primary/5"
             )}
-          </div>
+            title="View PDF"
+          >
+            <BookOpen className="h-7 w-7" />
+          </button>
+          
+          <button className="p-2 text-primary hover:bg-primary/5 rounded-full transition-colors" title="Save paper">
+            <BookmarkPlus className="h-7 w-7" />
+          </button>
 
-          {/* Dynamic Content Based on View Mode */}
-          {viewMode === "abstract" && <AbstractView paper={paper} />}
-          {viewMode === "article" && <ArticleView paper={paper} />}
-          {viewMode === "pdf" && <PDFView paper={paper} />}
-
-          {/* Engagement Bar & Comments (Only in Abstract View) */}
           {viewMode === "abstract" && (
-            <div className="mt-12 space-y-8">
-              <EngagementBar metrics={paper.metrics} />
-              <CommentSection comments={comments} />
-            </div>
+            <Button 
+              variant="outline" 
+              size="md" 
+              className="gap-2 font-semibold border-[#1A73E8] text-[#1A73E8] hover:bg-[#1A73E8]/5 rounded-lg h-11 px-6 shadow-sm"
+              onClick={() => setViewMode("article")}
+            >
+              <BookOpen className="h-5 w-5" />
+              Read Post
+            </Button>
           )}
         </div>
-
-        {/* Right Column (Sidebar) */}
-        <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0 space-y-8">
-          <AuthorCard author={paper.authors[0]} />
-          <RelatedPapers papers={relatedPapers} />
-        </div>
       </div>
+    </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 w-full">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-12 pb-24">
+          
+          {/* Left Column (Main Content) */}
+          <div className="flex-1 min-w-0">
+            {viewMode === "abstract" && (
+              <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <AbstractView paper={paper} />
+                <EngagementBar 
+                  metrics={{...paper.metrics, likes}} 
+                  isLiked={isLiked} 
+                  isSaved={isSaved}
+                  onLike={handleLike} 
+                  onSave={handleSave}
+                  onShare={handleShare}
+                />
+                <CommentSection 
+                  comments={comments} 
+                  newComment={newComment}
+                  setNewComment={setNewComment}
+                  onAddComment={handleAddComment}
+                />
+              </div>
+            )}
+            {viewMode === "article" && <ArticleView paper={paper} setViewMode={setViewMode} />}
+            {viewMode === "pdf" && <PDFView paper={paper} setViewMode={setViewMode} />}
+          </div>
+
+          {/* Right Column (Sidebar) */}
+          <aside className="w-full lg:w-[350px] flex-shrink-0 space-y-12">
+            <AuthorCard 
+              author={paper.authors[0]} 
+              isFollowing={isFollowing}
+              onFollow={handleFollow}
+            />
+            <RelatedPapers papers={relatedPapers} />
+          </aside>
+        </div>
+      </main>
     </div>
   );
 }
 
 // --- Sub-components ---
 
-function AbstractView({ paper }: { paper: PaperDetails }) {
+function PDFView({ paper, setViewMode }: { paper: PaperDetails, setViewMode: (mode: ViewMode) => void }) {
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-text-primary leading-tight">
-        {paper.title}
-      </h1>
-      
-      <p className="text-base text-text-secondary leading-relaxed">
-        {paper.abstract}
-      </p>
-      
-      <div className="flex flex-wrap gap-2 pt-2">
-        {paper.tags.map(tag => (
-          <span key={tag} className="inline-flex items-center px-2.5 py-1 rounded-md bg-surface text-xs font-medium text-text-secondary">
-            {tag}
-          </span>
-        ))}
+    <div className="flex flex-col h-[850px] bg-[#1E293B] rounded-[20px] overflow-hidden shadow-2xl border border-[#334155] animate-in zoom-in-95 duration-300">
+      {/* PDF Viewer Header (Matching Image 3) */}
+      <div className="h-14 bg-[#111827] border-b border-[#374151] flex items-center px-6 justify-between text-white/70 text-[13px] font-medium">
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={() => setViewMode("abstract")}
+            className="hover:text-white p-1 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="flex items-center gap-4 select-none">
+            <span>Page 1 of 45</span>
+            <div className="flex gap-1">
+              <button className="hover:text-white p-1 opacity-50">&rsaquo;</button>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+           {/* Zoom or other tools could go here */}
+        </div>
       </div>
 
-      <div className="pt-4">
-        {/* Placeholder for the paper thumbnail image */}
-        <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 border border-border shadow-sm flex items-center justify-center overflow-hidden">
-          <div className="text-4xl font-bold text-white/50">M</div>
+      {/* Document Preview Area */}
+      <div className="flex-1 overflow-auto p-12 flex justify-center bg-[#0F172A] custom-scrollbar">
+        <div className="w-full max-w-[760px] min-h-[1000px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-16 lg:p-24 transform origin-top transition-transform">
+          <div className="space-y-10">
+            <h1 className="text-[32px] font-bold text-text-primary leading-[1.3] text-center border-b border-gray-100 pb-10">
+              {paper.title}
+            </h1>
+            
+            <div className="text-center space-y-1">
+              <p className="text-[14px] font-semibold text-text-secondary">By {paper.authors.map(a => a.name).join(", ")}</p>
+              <p className="text-[12px] text-gray-400 italic">OpenScholar University Research Library</p>
+            </div>
+
+            <div className="pt-10">
+              <h3 className="text-[18px] font-bold text-text-primary mb-5 uppercase tracking-wider">Abstract</h3>
+              <p className="text-[15px] text-[#333] leading-[1.8] text-justify">
+                {paper.abstract}
+              </p>
+            </div>
+
+            <div className="space-y-6 pt-10">
+              <div className="h-4 w-full bg-gray-50 rounded animate-pulse"></div>
+              <div className="h-4 w-[90%] bg-gray-50 rounded animate-pulse"></div>
+              <div className="h-4 w-[95%] bg-gray-50 rounded animate-pulse"></div>
+              <div className="h-4 w-[85%] bg-gray-50 rounded animate-pulse"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function ArticleView({ paper }: { paper: PaperDetails }) {
+function AbstractView({ paper }: { paper: PaperDetails }) {
   return (
-    <div className="space-y-8">
-      <h1 className="text-4xl font-bold text-text-primary leading-tight font-serif">
+    <div className="space-y-6">
+      <h1 className="text-[32px] font-bold text-text-primary leading-tight tracking-tight">
         {paper.title}
       </h1>
       
-      <div className="flex items-center gap-6 text-sm text-text-secondary border-b border-border pb-6">
+      <p className="text-[15px] text-[#4A4A4A] leading-[1.6] max-w-3xl">
+        {paper.abstract}
+      </p>
+      
+      <div className="flex flex-wrap gap-2 pt-2">
+        {paper.tags.map(tag => (
+          <span key={tag} className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#F1F3F5] text-[12px] font-medium text-[#5F6368]">
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      <div className="pt-4">
+        {/* Paper Thumbnail */}
+        <div className="w-[120px] h-[120px] rounded-2xl bg-gradient-to-br from-[#E8EAED] to-[#D2D4D7] border border-[#E0E2E4] shadow-sm flex items-center justify-center overflow-hidden">
+          <div className="text-3xl font-bold text-white/60 select-none">M</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ArticleView({ paper, setViewMode }: { paper: PaperDetails; setViewMode: (mode: ViewMode) => void }) {
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <h1 className="text-[36px] font-bold text-text-primary leading-[1.2] font-serif">
+        {paper.title}
+      </h1>
+      
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-[13px] text-text-secondary border-b border-[#E0E2E4] pb-6">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-text-primary">{paper.authors.map(a => a.name).join(", ")}</span>
+          <span className="font-semibold text-text-primary">{paper.authors.map(a => a.name).join(", ")}</span>
         </div>
         <div className="flex items-center gap-2">
           <span>February 15, 2026</span>
@@ -145,65 +334,88 @@ function ArticleView({ paper }: { paper: PaperDetails }) {
         </div>
       </div>
 
-      <div className="prose prose-blue max-w-none prose-headings:font-serif prose-headings:text-text-primary prose-p:text-text-secondary prose-p:leading-relaxed">
+      <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-text-primary prose-p:text-[#4A4A4A] prose-p:leading-[1.7] prose-p:text-[16px]">
+        {/* Dynamic section rendering */}
+        <section className="mb-8">
+          <h2 className="text-[24px] mb-4">Abstract</h2>
+          <p>{paper.abstract}</p>
+        </section>
+
         {paper.fullText?.split('\n\n').map((paragraph, i) => {
-          if (paragraph.trim().split(' ').length === 1 || paragraph.trim().length < 20) {
-             return <h2 key={i} className="text-2xl font-bold mt-8 mb-4">{paragraph}</h2>;
+          const isHeading = paragraph.trim().split(' ').length < 4 && paragraph.length < 40;
+          if (isHeading) {
+             return <h2 key={i} className="text-[24px] mt-10 mb-5">{paragraph}</h2>;
           }
-          return <p key={i} className="mb-4">{paragraph}</p>;
-        })}
+          return <p key={i} className="mb-5">{paragraph}</p>;
+        }) || (
+          <>
+            <section className="mb-8">
+              <h2 className="text-[24px] mb-4 mt-8">Introduction</h2>
+              <p>Climate change represents one of the most pressing challenges of our time. Traditional climate models, while powerful, often struggle with the complexity and scale of global climate systems.</p>
+            </section>
+            <section className="mb-8">
+              <h2 className="text-[24px] mb-4 mt-8">Methodology</h2>
+              <p>We conducted a systematic review of machine learning applications in climate science, focusing on deep neural networks, ensemble methods, and hybrid approaches.</p>
+            </section>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function PDFView({ paper }: { paper: PaperDetails }) {
+function EngagementBar({ 
+  metrics, 
+  isLiked, 
+  isSaved,
+  onLike, 
+  onSave,
+  onShare 
+}: { 
+  metrics: PaperDetails["metrics"]; 
+  isLiked: boolean;
+  isSaved: boolean;
+  onLike: () => void;
+  onSave: () => void;
+  onShare: () => void;
+}) {
   return (
-    <div className="flex flex-col h-[800px] bg-[#1E293B] rounded-t-xl overflow-hidden shadow-2xl border border-border">
-      {/* PDF Toolbar */}
-      <div className="h-12 border-b border-white/10 flex items-center px-4 justify-between text-white/80 text-sm">
-        <div className="flex items-center gap-4">
-          <button className="hover:text-white">&lt;</button>
-          <span>Page 1 of 45</span>
-          <button className="hover:text-white">&gt;</button>
-        </div>
-      </div>
-      {/* PDF Document Container */}
-      <div className="flex-1 overflow-auto p-8 flex justify-center bg-[#0F172A]">
-        <div className="w-full max-w-[800px] min-h-[1000px] bg-white shadow-lg p-12 lg:p-24">
-          <h1 className="text-3xl font-bold text-text-primary mb-6">{paper.title}</h1>
-          <p className="text-sm text-text-secondary mb-8">By {paper.authors.map(a => a.name).join(", ")}</p>
-          <h3 className="text-lg font-bold text-text-primary mb-4">Abstract</h3>
-          <p className="text-text-secondary leading-relaxed">{paper.abstract}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EngagementBar({ metrics }: { metrics: PaperDetails["metrics"] }) {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-4 text-xs font-medium text-text-secondary px-1">
+    <div className="space-y-3 pt-4">
+      <div className="flex items-center gap-4 text-[13px] font-medium text-text-secondary px-1">
         <span>{metrics.likes} like</span>
         <span>{metrics.comments} Comment</span>
       </div>
       
-      <div className="flex items-center justify-between py-2 px-4 rounded-xl border border-border bg-background shadow-sm">
-        <button className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2">
-          <ThumbsUp className="h-4 w-4" />
+      <div className="flex items-center justify-between py-1.5 px-4 rounded-[14px] border border-[#E0E2E4] bg-white shadow-sm">
+        <button 
+          onClick={onLike}
+          className={cn(
+            "flex items-center gap-2.5 text-[14px] font-semibold transition-colors py-2 px-3 rounded-lg hover:bg-primary/5",
+            isLiked ? "text-primary" : "text-[#5F6368]"
+          )}
+        >
+          <ThumbsUp className={cn("h-[18px] w-[18px]", isLiked && "fill-current")} />
           Like
         </button>
-        <button className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2">
-          <MessageSquare className="h-4 w-4" />
+        <button className="flex items-center gap-2.5 text-[14px] font-semibold text-[#5F6368] hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/5">
+          <MessageSquare className="h-[18px] w-[18px]" />
           Comment
         </button>
-        <button className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2">
-          <BookmarkPlus className="h-4 w-4" />
+        <button 
+          onClick={onSave}
+          className={cn(
+            "flex items-center gap-2.5 text-[14px] font-semibold transition-colors py-2 px-3 rounded-lg hover:bg-primary/5",
+            isSaved ? "text-primary" : "text-[#5F6368]"
+          )}
+        >
+          <BookmarkPlus className={cn("h-[18px] w-[18px]", isSaved && "fill-current")} />
           Save
         </button>
-        <button className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors py-2">
-          <Share2 className="h-4 w-4" />
+        <button 
+          onClick={onShare}
+          className="flex items-center gap-2.5 text-[14px] font-semibold text-[#5F6368] hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/5"
+        >
+          <Share2 className="h-[18px] w-[18px]" />
           Share
         </button>
       </div>
@@ -211,41 +423,59 @@ function EngagementBar({ metrics }: { metrics: PaperDetails["metrics"] }) {
   );
 }
 
-function CommentSection({ comments }: { comments: Comment[] }) {
+function CommentSection({ 
+  comments, 
+  newComment, 
+  setNewComment, 
+  onAddComment 
+}: { 
+  comments: Comment[];
+  newComment: string;
+  setNewComment: (val: string) => void;
+  onAddComment: () => void;
+}) {
   return (
-    <div className="space-y-6">
-      {/* Comment Input */}
-      <div className="bg-surface rounded-xl p-4 space-y-2">
-        <label className="text-xs font-medium text-text-secondary block">Thought Your Comment</label>
-        <div className="relative">
+    <div className="space-y-8">
+      {/* Comment Input Box */}
+      <div className="bg-[#F8F9FA] rounded-[18px] p-6 border border-[#F1F3F5] space-y-4 shadow-sm">
+        <label className="text-[13px] font-bold text-[#5F6368] tracking-wide uppercase">Thought Your Comment</label>
+        <div className="relative group">
           <textarea 
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
             placeholder="Share your thoughts about this thesis..."
-            className="w-full min-h-[80px] bg-background border border-border rounded-lg p-3 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary resize-none pr-12"
+            className="w-full min-h-[100px] bg-white border border-[#E0E2E4] rounded-2xl p-4 text-[15px] text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all resize-none pr-14"
           />
-          <button className="absolute right-3 bottom-3 text-text-primary hover:text-primary transition-colors">
-            <Send className="h-4 w-4" />
+          <button 
+            onClick={onAddComment}
+            disabled={!newComment.trim()}
+            className="absolute right-4 bottom-4 p-2 bg-transparent text-text-primary hover:text-primary hover:scale-110 transition-all disabled:opacity-30 disabled:hover:scale-100"
+          >
+            <Send className="h-5 w-5" />
           </button>
         </div>
       </div>
 
       {/* Comment List */}
-      <div className="space-y-6 pt-4">
+      <div className="space-y-8 pt-2">
         {comments.map((comment) => (
-          <div key={comment.id} className="flex gap-4 border-b border-border pb-6 last:border-0">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+          <div key={comment.id} className="flex gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="w-[42px] h-[42px] rounded-full bg-[#1A73E8] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
               {comment.user.name.charAt(0)}
             </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-baseline gap-2">
-                <span className="font-semibold text-sm text-text-primary">{comment.user.name}</span>
-                <span className="text-xs text-text-secondary">January 18, 2024</span>
+            <div className="flex-1 space-y-2">
+              <div className="flex items-baseline gap-2.5">
+                <span className="font-bold text-[15px] text-text-primary">{comment.user.name}</span>
+                <span className="text-[12px] text-text-secondary font-medium tracking-tight">
+                  {new Date(comment.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </span>
               </div>
-              <p className="text-sm text-text-secondary leading-relaxed pt-1">
+              <p className="text-[14px] text-[#4A4A4A] leading-[1.6] pt-0.5">
                 {comment.content}
               </p>
-              <div className="flex items-center gap-4 pt-2 text-xs font-medium text-text-secondary">
-                <span>6d</span>
-                <button className="hover:text-text-primary transition-colors">Reply</button>
+              <div className="flex items-center gap-5 pt-1.5 text-[12px] font-bold text-[#5F6368]">
+                <span className="opacity-70">Just now</span>
+                <button className="hover:text-primary transition-colors tracking-tight">Reply</button>
               </div>
             </div>
           </div>
@@ -255,30 +485,57 @@ function CommentSection({ comments }: { comments: Comment[] }) {
   );
 }
 
-function AuthorCard({ author }: { author: AuthorProfile }) {
+function AuthorCard({ 
+  author, 
+  isFollowing, 
+  onFollow 
+}: { 
+  author: AuthorProfile;
+  isFollowing: boolean;
+  onFollow: () => void;
+}) {
   return (
-    <div className="rounded-xl border border-border bg-background p-5 shadow-sm">
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-primary to-blue-400 border-2 border-white shadow-md flex items-center justify-center text-white text-xl font-bold">
-          {author.name.charAt(0)}
-        </div>
-        <Button variant="primary" size="sm" className="rounded-full px-5 bg-text-primary hover:bg-black text-white">
-          Follow
+    <div className="rounded-[20px] border border-[#E0E2E4] bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="flex items-center justify-between mb-5">
+        {/* Avatar with image or initial */}
+        {author.avatarUrl ? (
+          <img src={author.avatarUrl} alt={author.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md" />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#1A73E8] to-[#64B5F6] border-2 border-white shadow-md flex items-center justify-center text-white text-[24px] font-bold">
+            {author.name.charAt(0)}
+          </div>
+        )}
+        <Button 
+          variant={isFollowing ? "outline" : "primary"}
+          size="sm" 
+          onClick={onFollow}
+          className={cn(
+            "rounded-lg px-6 font-bold text-[13px] h-8 transition-all",
+            isFollowing ? "border-gray-300 text-gray-600 hover:bg-gray-50" : "bg-black hover:bg-gray-800 text-white"
+          )}
+        >
+          {isFollowing ? "Following" : "Follow"}
         </Button>
       </div>
       
       <div className="space-y-1 mb-4">
-        <h3 className="font-semibold text-text-primary text-base">{author.name}</h3>
-        <p className="text-xs text-text-secondary">{author.institution}</p>
+        <h3 className="font-bold text-text-primary text-[17px] tracking-tight">{author.name}</h3>
+        <p className="text-[12px] text-[#5F6368] font-medium">{author.institution}</p>
       </div>
 
-      <p className="text-xs text-text-secondary leading-relaxed mb-6 line-clamp-3">
+      <p className="text-[13px] text-[#4A4A4A] leading-[1.6] mb-6 line-clamp-3">
         {author.bio}
       </p>
 
-      <div className="flex items-center gap-4 text-xs font-medium text-text-primary">
-        <span>{author.followers} Follower</span>
-        <span>4k+ Like</span>
+      <div className="flex items-center gap-6 text-[13px] font-bold text-text-primary border-t border-[#F1F3F5] pt-5">
+        <div className="flex flex-col">
+          <span className="text-text-primary">{author.followers}</span>
+          <span className="text-[#5F6368] text-[11px] uppercase tracking-wider">Follower</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-text-primary">4k+</span>
+          <span className="text-[#5F6368] text-[11px] uppercase tracking-wider">Like</span>
+        </div>
       </div>
     </div>
   );
@@ -286,19 +543,19 @@ function AuthorCard({ author }: { author: AuthorProfile }) {
 
 function RelatedPapers({ papers }: { papers: PaperDetails[] }) {
   return (
-    <div className="space-y-4">
-      <h4 className="text-sm font-bold text-text-primary">Related Thesis :</h4>
+    <div className="space-y-5">
+      <h4 className="text-[14px] font-bold text-text-primary tracking-tight">Related Thesis :</h4>
       <div className="space-y-0">
         {papers.map((paper, i) => (
-          <div key={paper.id} className={cn("py-4 border-b border-border last:border-0", i === 0 ? "pt-2" : "")}>
-            <h5 className="text-sm font-semibold text-text-primary leading-snug mb-3">
+          <div key={paper.id} className={cn("py-5 border-b border-[#F1F3F5] last:border-0", i === 0 ? "pt-0" : "")}>
+            <h5 className="text-[14px] font-bold text-text-primary leading-[1.4] mb-3 line-clamp-2">
               {paper.title}
             </h5>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-text-primary">{paper.authors[0].name}</span>
-              <button className="text-xs font-medium text-primary hover:text-primary-hover transition-colors flex items-center gap-1">
+              <span className="text-[12px] font-bold text-[#5F6368]">{paper.authors[0].name}</span>
+              <button className="text-[12px] font-bold text-[#1A73E8] hover:text-[#1557B0] transition-colors flex items-center gap-1.5 group">
                 View PDF
-                <span className="text-lg leading-none">&rsaquo;</span>
+                <span className="text-[16px] leading-none transition-transform group-hover:translate-x-1">&rsaquo;</span>
               </button>
             </div>
           </div>
@@ -307,3 +564,4 @@ function RelatedPapers({ papers }: { papers: PaperDetails[] }) {
     </div>
   );
 }
+

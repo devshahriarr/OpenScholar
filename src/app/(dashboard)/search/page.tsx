@@ -26,8 +26,8 @@ export default async function SearchPage({
 
         <div className="space-y-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-text-primary tracking-tight">Global Thesis Library</h1>
-            <p className="text-sm text-text-secondary">Browse research from universities worldwide</p>
+            <h1 className="text-2xl font-bold text-text-primary tracking-tight">Discovery</h1>
+            <p className="text-sm text-text-secondary">Explore the latest research and thesis from our community</p>
           </div>
 
           <Suspense fallback={<ResultsGridSkeleton />} key={JSON.stringify(await searchParams)}>
