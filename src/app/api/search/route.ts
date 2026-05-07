@@ -22,8 +22,13 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error("[SEARCH_API_ERROR]", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("[SEARCH_API_ERROR]", {
+      message: error?.message,
+      code: error?.code,
+      stack: error?.stack,
+    });
+    const errorMessage = error?.message || "Failed to fetch research papers";
+    return NextResponse.json({ message: errorMessage }, { status: 500 });
   }
 }

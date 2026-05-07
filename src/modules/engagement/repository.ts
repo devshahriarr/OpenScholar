@@ -194,16 +194,18 @@ export async function getFollowingFeed(userId: string) {
     where: {
       createdBy: { in: followingIds },
       isDeleted: false,
-      // Temporarily removing approved filter for testing
+      status: "approved",
     },
     include: {
       category: true,
       creator: {
-        include: { author: true }
+        select: { id: true, name: true, university: true }
       },
       versions: {
+        where: { isPublished: true },
         orderBy: { versionNumber: "desc" },
-        take: 1
+        take: 1,
+        include: { authors: true }
       },
       metrics: true
     },

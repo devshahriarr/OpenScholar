@@ -31,7 +31,6 @@ model PaperVersion {
   title         String
   abstract      String
   keywords      String[]
-  content       String?  @db.Text
   pdfUrl        String   @map("pdf_url")
   isPublished   Boolean  @default(false) @map("is_published")
   createdAt     DateTime @default(now()) @map("created_at")

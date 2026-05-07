@@ -24,18 +24,23 @@ export default function ClientResultsGrid({ searchParamsStr }: { searchParamsStr
   useEffect(() => {
     setIsLoading(true);
     setError(null);
+    
     fetch(`/api/search?${searchParamsStr}`)
       .then(async res => {
         if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || "Failed to fetch research papers.");
+          try {
+            const errData = await res.json();
+            throw new Error(errData.message || "Failed to fetch research papers.");
+          } catch (e) {
+            throw new Error(`Server error: ${res.status} ${res.statusText}`);
+          }
         }
         return res.json();
       })
       .then(setData)
       .catch((err) => {
-        console.error("[SEARCH_FETCH_ERROR]", err);
-        setError(err.message);
+        console.error("[SEARCH_FETCH_ERROR]", err.message);
+        setError(err.message || "An unexpected error occurred. Please try again.");
       })
       .finally(() => setIsLoading(false));
   }, [searchParamsStr]);
