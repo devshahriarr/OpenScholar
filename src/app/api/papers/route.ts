@@ -56,8 +56,8 @@ export async function POST(req: Request) {
     // 4. Temporary Paper ID for Storage Path (since Prisma assigns UUID on create)
     const tempPaperId = uuidv4();
 
-    // 5. Upload File to MinIO/S3
-    const objectKey = await uploadFile(
+    // 5. Upload File to Local Storage
+    const pdfUrl = await uploadFile(
       buffer,
       file.name,
       file.type,
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       title,
       abstract,
       keywords,
-      pdfUrl: objectKey, // Storing the S3 object key, not a full public URL initially
+      pdfUrl: pdfUrl, // Storing the local public path (e.g., /uploads/papers/...)
       categoryId,
       userId: user.sub,
     });

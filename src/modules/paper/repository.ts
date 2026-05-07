@@ -43,3 +43,17 @@ export async function createPaperDraft(data: {
     },
   });
 }
+export async function getPapersByUserId(userId: string) {
+  return prisma.paper.findMany({
+    where: { createdBy: userId, isDeleted: false },
+    orderBy: { createdAt: "desc" },
+    include: {
+      category: true,
+      versions: {
+        orderBy: { versionNumber: "desc" },
+        take: 1,
+      },
+      metrics: true,
+    },
+  });
+}

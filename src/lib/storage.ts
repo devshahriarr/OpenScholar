@@ -1,11 +1,19 @@
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+
+/**
+ * [DEPRECATED] S3/MinIO Implementation
+ * The user requested to switch to local storage because of ECONNREFUSED issues with MinIO.
+ */
+/*
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { v4 as uuidv4 } from "uuid";
 
 const s3Client = new S3Client({
   region: process.env.S3_REGION || "us-east-1",
   endpoint: process.env.S3_ENDPOINT || "http://localhost:9000",
-  forcePathStyle: true, // Required for MinIO
+  forcePathStyle: true,
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY || "minioadmin",
     secretAccessKey: process.env.S3_SECRET_KEY || "minioadmin",
@@ -13,9 +21,12 @@ const s3Client = new S3Client({
 });
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || "openscholar";
+*/
+
+const UPLOAD_BASE_PATH = path.join(process.cwd(), "public", "uploads");
 
 /**
- * Uploads a file buffer to S3/MinIO and returns the object key.
+ * Uploads a file buffer to the local filesystem and returns the public path.
  */
 export async function uploadFile(
   fileBuffer: Buffer,
@@ -24,31 +35,47 @@ export async function uploadFile(
   paperId: string,
   versionNumber: number
 ): Promise<string> {
-  const extension = fileName.split(".").pop();
-  const uniqueId = uuidv4().substring(0, 8);
-  const objectKey = `papers/${paperId}/v${versionNumber}_${uniqueId}.${extension}`;
+  try {
+    const extension = fileName.split(".").pop() || "pdf";
+    const uniqueId = uuidv4().substring(0, 8);
+    
+    // Relative directory for public access
+    const relativeDir = path.join("papers", paperId);
+    // Absolute directory for file system operations
+    const absoluteDir = path.join(UPLOAD_BASE_PATH, relativeDir);
+    
+    // Create directory if it doesn't exist
+    await mkdir(absoluteDir, { recursive: true });
 
-  const command = new PutObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: objectKey,
-    Body: fileBuffer,
-    ContentType: contentType,
-  });
+    const fileNameWithVersion = `v${versionNumber}_${uniqueId}.${extension}`;
+    const absoluteFilePath = path.join(absoluteDir, fileNameWithVersion);
+    const publicPath = `/uploads/papers/${paperId}/${fileNameWithVersion}`;
 
-  await s3Client.send(command);
+    // Write file to local disk
+    await writeFile(absoluteFilePath, fileBuffer);
 
-  return objectKey;
+    return publicPath;
+  } catch (error) {
+    console.error("[LOCAL_STORAGE_UPLOAD_ERROR]", error);
+    throw new Error("Failed to upload file to local storage.");
+  }
 }
 
 /**
- * Generates a pre-signed URL for downloading or viewing a file.
- * The URL expires in 1 hour.
+ * Returns the public URL for a file.
+ * Since we are using local storage in the public folder, the path is the URL.
  */
-export async function getFileUrl(objectKey: string): Promise<string> {
-  const command = new GetObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: objectKey,
-  });
+export async function getFileUrl(pathOrKey: string): Promise<string> {
+  // If it starts with http, it might be an old S3 URL or external link
+  if (pathOrKey.startsWith("http")) {
+    return pathOrKey;
+  }
+  
+  // If it's a relative path starting with /uploads, return as is
+  if (pathOrKey.startsWith("/uploads")) {
+    return pathOrKey;
+  }
 
-  return getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  // Fallback / legacy support for S3 keys that didn't have /uploads prefix
+  return `/uploads/${pathOrKey.replace(/^papers\//, "papers/")}`;
 }
