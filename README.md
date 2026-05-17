@@ -255,14 +255,12 @@ Project is **properly configured** for development:
 |----------|---|---|
 | `POST /api/papers` | ✅ Complete | Creates draft |
 | `GET /api/papers/[id]` | ✅ Complete | Returns paper with versions |
-| `PUT /api/papers/[id]` | ❌ Missing | Not implemented |
+| `PUT /api/papers/[id]` | ✅ Complete | Updates draft metadata |
 | `GET /api/papers/mine` | ✅ Complete | Returns user's papers |
-| `POST /api/papers/[id]/submit` | ❌ Missing | Should change status to pending |
+| `POST /api/papers/[id]/submit` | ✅ Complete | Changes status to pending |
 | `GET /api/papers/[id]/related` | ⚠️ Stub only | Mock data |
 
 **What's Missing:**
-- Update paper metadata (PUT request)
-- Submit paper (change status from draft → pending)
 - Fetch related papers (by category, tags, keywords)
 
 ---
@@ -434,9 +432,9 @@ Each module should have:
 
 ### 🟡 Missing UI Pages
 
-- ❌ Paper details page (`/papers/[id]`)
-- ❌ Settings page (`/settings`)
-- ❌ User profile view (`/users/[id]`)
+- ⚠️ Paper details page (`/papers/[id]`)
+- ✅ Settings page (`/settings`)
+- ✅ User profile view (`/users/[id]`)
 - ❌ Notifications page (`/notifications`)
 - ❌ Following/followers list
 - ❌ Search results detail page
@@ -464,15 +462,15 @@ Each module should have:
 
 ### **Phase 2C — User Profiles & Paper Finalization (Current)**
 
-**PRIORITY 1: User Profile & Settings** (2-3 days)
-- [ ] User profile API (`/api/users/[id]`)
-- [ ] User settings API (`/api/users/settings`)
-- [ ] Account Settings UI
-- [ ] Public User Profile UI
+**PRIORITY 1: User Profile & Settings** (Completed)
+- [x] User profile API (`/api/users/[id]`)
+- [x] User settings API (`/api/users/settings`)
+- [x] Account Settings UI
+- [x] Public User Profile UI
 
-**PRIORITY 2: Finalizing Paper Actions** (2 days)
-- [ ] `PUT /api/papers/[id]` - Update draft metadata
-- [ ] `POST /api/papers/[id]/submit` - Transition to pending
+**PRIORITY 2: Finalizing Paper Actions** (Completed)
+- [x] `PUT /api/papers/[id]` - Update draft metadata
+- [x] `POST /api/papers/[id]/submit` - Transition to pending
 
 **Estimated Time:** 1 week  
 **Dependencies:** None (can start immediately)
