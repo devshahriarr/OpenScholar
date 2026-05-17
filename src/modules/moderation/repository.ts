@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { PaperStatus, ModerationAction } from "@prisma/client";
+import { getSystemAnalytics } from "@/modules/analytics/repository";
 
 export async function getPapersByStatus(status?: PaperStatus, limit: number = 10) {
   return prisma.paper.findMany({
@@ -31,7 +32,7 @@ export async function getPapersByStatus(status?: PaperStatus, limit: number = 10
 }
 
 export async function getAdminDashboardStats() {
-  const [totalUsers, totalPapers, pendingPapers, categories] = await Promise.all([
+  const [totalUsers, totalPapers, pendingPapers, categories, analytics] = await Promise.all([
     prisma.user.count(),
     prisma.paper.count({ where: { isDeleted: false } }),
     prisma.paper.count({ where: { status: PaperStatus.pending, isDeleted: false } }),
@@ -41,7 +42,8 @@ export async function getAdminDashboardStats() {
           select: { papers: { where: { isDeleted: false } } }
         }
       }
-    })
+    }),
+    getSystemAnalytics()
   ]);
 
   const categoryDistribution = categories
@@ -49,13 +51,15 @@ export async function getAdminDashboardStats() {
     .map(c => ({
       name: c.name,
       value: c._count.papers,
-      // Assign some colors or let frontend handle it
     }));
 
   return {
     totalUsers,
     totalPapers,
     pendingPapers,
+    totalViews: analytics.totalViews,
+    totalDownloads: analytics.totalDownloads,
+    activeToday: analytics.activeToday,
     categoryDistribution
   };
 }

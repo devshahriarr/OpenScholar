@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, Download, Share2, BookmarkPlus, MessageSquare, ThumbsUp, Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -30,6 +30,32 @@ export default function PaperClientView({
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const viewTrackedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!viewTrackedRef.current) {
+      viewTrackedRef.current = true;
+      fetch("/api/analytics/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paperId: paper.id, eventType: "view" }),
+      }).catch(console.error);
+    }
+  }, [paper.id]);
+
+  const handleDownload = async () => {
+    try {
+      await fetch("/api/analytics/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paperId: paper.id, eventType: "download" }),
+      });
+    } catch (error) {
+      console.error("Failed to track download", error);
+    }
+    window.open(paper.pdfUrl, "_blank");
+  };
 
   const handleLike = async () => {
     // Optimistic update
@@ -124,7 +150,7 @@ export default function PaperClientView({
             <p className="text-[13px] font-medium text-[#FF4D4D]">
               The full paper is available for download. Click the &quot;Download PDF&quot; button above to access the complete manuscript.
             </p>
-            <Button variant="primary" size="sm" className="gap-2 bg-[#1A73E8] hover:bg-[#1557B0] text-white rounded-lg h-9">
+            <Button onClick={handleDownload} variant="primary" size="sm" className="gap-2 bg-[#1A73E8] hover:bg-[#1557B0] text-white rounded-lg h-9">
               <Download className="h-4 w-4" />
               Download PDF
             </Button>

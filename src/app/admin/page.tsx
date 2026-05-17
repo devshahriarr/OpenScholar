@@ -116,11 +116,15 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <AdminStatCard label="Total Users" value={stats.totalUsers.toLocaleString()} trend="+12%" icon={Users} color="primary" />
         <AdminStatCard label="Total Papers" value={stats.totalPapers.toLocaleString()} trend="+8%" icon={FileText} color="success" />
         <AdminStatCard label="Pending Reviews" value={stats.pendingPapers.toLocaleString()} trend="-5%" icon={Clock} color="warning" />
-        <AdminStatCard label="Active Today" value="3,542" trend="+18%" icon={Activity} color="purple" />
+        <AdminStatCard label="Active Today" value={stats.activeToday?.toLocaleString() ?? '0'} trend="Live" icon={Activity} color="purple" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <AdminStatCard label="Total Views" value={stats.totalViews?.toLocaleString() ?? '0'} trend="All time" icon={Eye} color="primary" />
+        <AdminStatCard label="Total Downloads" value={stats.totalDownloads?.toLocaleString() ?? '0'} trend="All time" icon={CheckCircle2} color="success" />
       </div>
 
       {/* Charts Grid */}

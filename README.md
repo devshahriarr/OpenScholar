@@ -337,19 +337,19 @@ Project is **properly configured** for development:
 
 ---
 
-#### 3. Paper Details View (0% Complete)
+#### 3. Paper Details View (100% Complete)
 
-**UI:** ❌ Missing  
-**API:** ⚠️ Partial
+**UI:** ✅ Complete  
+**API:** ✅ Complete
 
-**What's Missing:**
-- [ ] Create `/papers/[id]` page
-- [ ] Display paper title, authors, abstract
-- [ ] PDF viewer integration
-- [ ] Show comments & reactions
-- [ ] Related papers sidebar
-- [ ] Download button
-- [ ] Analytics (view count)
+**What's Done:**
+- ✅ Created `/papers/[id]` page
+- ✅ Display paper title, authors, abstract
+- ✅ PDF viewer integration
+- ✅ Show comments & reactions
+- ✅ Related papers sidebar
+- ✅ Download button
+- ⚠️ Analytics (view count) - *Backend pending*
 
 ---
 
@@ -375,22 +375,17 @@ Project is **properly configured** for development:
 
 ---
 
-#### 5. Analytics & Tracking (0% Complete)
+#### 5. Analytics & Tracking (100% Complete)
 
-**UI:** ✅ Dashboard exists (mock data)  
-**API:** ❌ Not implemented
+**UI:** ✅ Dashboard with live data  
+**API:** ✅ Implemented
 
-**What's Missing:**
-- [ ] Track paper views
-- [ ] Track paper downloads
-- [ ] Aggregate analytics per paper
-- [ ] User analytics (published papers, followers)
-- [ ] System-wide analytics (total papers, users)
-
-**Required Implementation:**
-- [ ] POST endpoint to log analytics events
-- [ ] Query aggregation for dashboard
-- [ ] Time-series data for charts
+**What's Done:**
+- ✅ `POST /api/analytics/track` - Logs view & download events
+- ✅ `PaperMetrics` upserted on every event via Prisma transaction
+- ✅ Admin Dashboard shows real Total Views, Downloads, Active Today
+- ✅ View tracked on Paper Details page load (1 load = 1 view)
+- ✅ Download tracked on PDF download click
 
 ---
 
@@ -479,11 +474,11 @@ Each module should have:
 
 ### **Phase 3 — Notifications, Analytics & Production (Upcoming)**
 
-**PRIORITY 3: Analytics** (2 days)
-- [ ] Track paper views
-- [ ] Track downloads
-- [ ] Aggregate statistics
-- [ ] Dashboard real data
+**PRIORITY 3: Analytics** (Completed)
+- [x] Track paper views
+- [x] Track downloads
+- [x] Aggregate statistics
+- [x] Dashboard real data
 
 **PRIORITY 4: Notifications** (2 days)
 - [ ] Create notification trigger system
