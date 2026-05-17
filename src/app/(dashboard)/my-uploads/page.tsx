@@ -71,6 +71,20 @@ export default function MyUploadsPage() {
     );
   }
 
+  const handleSubmitPaper = async (id: string) => {
+    try {
+      const res = await fetch(`/api/papers/${id}/submit`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to submit paper");
+      
+      // Update local state to reflect pending status
+      setPapers(papers.map(p => p.id === id ? { ...p, status: "pending" } : p));
+      alert("Paper successfully submitted for moderation!");
+    } catch (err) {
+      console.error(err);
+      alert("Error submitting paper. Please try again.");
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
       {/* Stats */}
@@ -182,9 +196,28 @@ export default function MyUploadsPage() {
                 </div>
               </div>
 
-              <Link href={`/papers/${paper.id}`} className="text-xs font-bold text-primary hover:underline underline-offset-4">
-                View Paper Details
-              </Link>
+              <div className="flex items-center justify-between mt-auto">
+                <Link href={`/papers/${paper.id}`} className="text-xs font-bold text-primary hover:underline underline-offset-4">
+                  View Paper Details
+                </Link>
+
+                {paper.status === 'draft' && (
+                  <div className="flex gap-2">
+                    <Link 
+                      href={`/papers/${paper.id}/edit`}
+                      className="text-xs font-bold bg-secondary text-white px-3 py-1.5 rounded-lg hover:bg-secondary-hover transition-colors shadow-sm"
+                    >
+                      Edit Draft
+                    </Link>
+                    <button 
+                      onClick={() => handleSubmitPaper(paper.id)}
+                      className="text-xs font-bold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>

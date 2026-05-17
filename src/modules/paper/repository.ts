@@ -26,7 +26,7 @@ export async function createPaperDraft(data: {
     data: {
       categoryId: data.categoryId,
       createdBy: data.userId,
-      status: PaperStatus.pending, // Automatically pending for moderation after upload
+      status: PaperStatus.draft, // Created as draft initially
       versions: {
         create: {
           versionNumber: 1,
@@ -41,6 +41,54 @@ export async function createPaperDraft(data: {
     include: {
       versions: true,
     },
+  });
+}
+
+export async function updatePaperDraft(id: string, userId: string, data: {
+  title?: string;
+  abstract?: string;
+  keywords?: string[];
+  categoryId?: number;
+}) {
+  const paper = await prisma.paper.findUnique({
+    where: { id, createdBy: userId },
+    include: { versions: { orderBy: { versionNumber: 'desc' }, take: 1 } }
+  });
+
+  if (!paper || paper.status !== PaperStatus.draft) {
+    throw new Error("Only draft papers can be updated");
+  }
+
+  const latestVersion = paper.versions[0];
+
+  return prisma.$transaction([
+    ...(data.categoryId ? [prisma.paper.update({
+      where: { id },
+      data: { categoryId: data.categoryId }
+    })] : []),
+    prisma.paperVersion.update({
+      where: { id: latestVersion.id },
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.abstract && { abstract: data.abstract }),
+        ...(data.keywords && { keywords: data.keywords })
+      }
+    })
+  ]);
+}
+
+export async function submitPaper(id: string, userId: string) {
+  const paper = await prisma.paper.findUnique({
+    where: { id, createdBy: userId }
+  });
+
+  if (!paper || paper.status !== PaperStatus.draft) {
+    throw new Error("Only draft papers can be submitted");
+  }
+
+  return prisma.paper.update({
+    where: { id },
+    data: { status: PaperStatus.pending }
   });
 }
 export async function getPapersByUserId(userId: string) {
