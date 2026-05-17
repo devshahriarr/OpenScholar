@@ -82,7 +82,10 @@ export async function searchPapers(filters: SearchFilters): Promise<SearchRespon
             },
           },
           metrics: {
-            select: { views: true, downloads: true },
+            select: {
+              viewCount: true,
+              downloadCount: true,
+            }
           },
         },
       }),

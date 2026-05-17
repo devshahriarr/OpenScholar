@@ -83,11 +83,18 @@ export default function PaperCard({ paper }: PaperCardProps) {
         </div>
 
         {/* View button */}
-        <Link href={`/papers/${paper.id}`} className="mt-auto">
+        <Link 
+            href={`/papers/${paper.id}`}
+            className="text-primary text-[11px] font-extrabold flex items-center gap-1 hover:underline underline-offset-4 whitespace-nowrap"
+          >
+            View Thesis
+          </Link>
+
+        {/* <Link href={`/papers/${paper.id}`} className="mt-auto">
           <Button variant="primary" size="sm" className="w-full" aria-label={`View thesis: ${paper.title}`}>
             View Thesis
           </Button>
-        </Link>
+        </Link> */}
       </div>
     </article>
   );

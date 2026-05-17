@@ -1,8 +1,8 @@
 # OpenScholar – Comprehensive Project Analysis
 
-> **Last Updated:** May 7, 2026  
-> **Status:** Foundation Built → Backend APIs In Progress  
-> **Phase:** 2A (Core Infrastructure)
+> **Last Updated:** May 17, 2026  
+> **Status:** Phase 2A/2B Complete → Advanced Features & Polish In Progress  
+> **Phase:** 2C (Analytics, Notifications & User Features)
 
 ---
 
@@ -39,10 +39,10 @@ OpenScholar is an **open-access academic research publishing platform** designed
 |-----------|--------|-----------|
 | Database Schema | ✅ Complete | 100% |
 | Frontend UI | ✅ Substantial | 85-90% |
-| Auth Infrastructure | ⚠️ Partial | 60% |
-| API Layer | ⚠️ Partial | 40% |
-| Security & Middleware | ⚠️ Partial | 50% |
-| Feature Implementation | ❌ Early | 15-20% |
+| Auth Infrastructure | ✅ Substantial | 95% |
+| API Layer | ⚠️ Partial | 70% |
+| Security & Middleware | ✅ Substantial | 90% |
+| Feature Implementation | ⚠️ Partial | 40% |
 
 ---
 
@@ -146,8 +146,7 @@ Core authentication components are **implemented and functional:**
   - `validateCredentials()` - Verify password
 
 **What's Missing:**
-- ❌ Token expiration verification (returns null on expired)
-- ⚠️ Email service not fully tested (SMTP config required)
+- ⚠️ Email service not fully tested in production (SMTP config required)
 - ⚠️ Some edge cases in forgot/reset password
 
 **Location:** [src/lib/auth.ts](src/lib/auth.ts), [src/lib/mailer.ts](src/lib/mailer.ts), [src/modules/auth/](src/modules/auth/), [src/middleware.ts](src/middleware.ts)
@@ -248,81 +247,23 @@ Project is **properly configured** for development:
 
 ## ❌ What Is NOT Complete / Remaining Work
 
-### 🔴 Critical Issues
-
-#### 1. Enum Mismatch Bugs (HIGH PRIORITY)
-
-**Issue:** Paper status enum in schema uses lowercase, but code uses UPPERCASE.
-
-**Affected Files:**
-- ❌ [src/app/api/admin/papers/pending/route.ts](src/app/api/admin/papers/pending/route.ts)
-  - Uses `PaperStatus.pending` ✅ (correct)
-  - But earlier code referenced `"PENDING"` ❌
-  
-- ❌ [src/app/api/admin/papers/[id]/approve/route.ts](src/app/api/admin/papers/[id]/approve/route.ts)
-  - Sets status to `"PUBLISHED"` ❌ (not valid enum value)
-  - Should be `PaperStatus.approved` ✅
-  
-- ❌ [src/app/api/admin/papers/[id]/reject/route.ts](src/app/api/admin/papers/[id]/reject/route.ts)
-  - May have similar issues
-
-**Schema Definition:**
-```prisma
-enum PaperStatus {
-  draft
-  pending
-  approved
-  rejected
-}
-```
-
-**Fix Required:** Update all API routes to use correct enum values.
-
----
-
-#### 2. Import Path Bugs
-
-**Issue:** API routes reference wrong import path for Prisma client.
-
-**Affected File:**
-- [src/app/api/admin/papers/[id]/approve/route.ts](src/app/api/admin/papers/[id]/approve/route.ts)
-  - References `@/lib/prisma` ❌
-  - Should be `@/lib/db` ✅
-
----
-
-#### 3. Security Issue - JWT in localStorage
-
-**Issue:** Login page stores JWT in `localStorage` instead of secure httpOnly cookies.
-
-**Affected File:**
-- [src/app/(auth)/login/page.tsx](src/app/(auth)/login/page.tsx)
-
-**Risk:** XSS attacks can steal token from localStorage
-
-**Fix:** Server already sets httpOnly cookie, remove localStorage code.
-
----
-
-### 🟠 Incomplete APIs (40% Done)
+### 🟠 Incomplete APIs (70% Done)
 
 #### Paper Management APIs
 
 | Endpoint | Implementation | Status |
 |----------|---|---|
-| `POST /api/papers` | ✅ Create draft | Works |
-| `GET /api/papers/[id]` | ⚠️ Stub only | Returns mock data |
+| `POST /api/papers` | ✅ Complete | Creates draft |
+| `GET /api/papers/[id]` | ✅ Complete | Returns paper with versions |
 | `PUT /api/papers/[id]` | ❌ Missing | Not implemented |
-| `GET /api/papers/mine` | ⚠️ Stub only | Mock data |
+| `GET /api/papers/mine` | ✅ Complete | Returns user's papers |
 | `POST /api/papers/[id]/submit` | ❌ Missing | Should change status to pending |
 | `GET /api/papers/[id]/related` | ⚠️ Stub only | Mock data |
 
 **What's Missing:**
-- Update paper metadata (title, abstract, etc.)
+- Update paper metadata (PUT request)
 - Submit paper (change status from draft → pending)
 - Fetch related papers (by category, tags, keywords)
-- Fetch user's papers with filtering
-- Get full paper with all versions
 
 ---
 
@@ -330,21 +271,17 @@ enum PaperStatus {
 
 | Endpoint | Implementation | Status |
 |----------|---|---|
-| `GET /api/comments` | ⚠️ Partial | Returns mock data |
-| `POST /api/comments` | ❌ Missing | Not implemented |
-| `POST /api/comments/[id]/reply` | ❌ Missing | Not implemented |
-| `POST /api/engagement/react` | ❌ Missing | Should create reaction |
-| `DELETE /api/engagement/react` | ❌ Missing | Should delete reaction |
-| `POST /api/engagement/save` | ❌ Missing | Should save paper |
-| `DELETE /api/engagement/save` | ❌ Missing | Should unsave paper |
-| `GET /api/engagement/follow` | ❌ Missing | Should follow user |
+| `GET /api/comments` | ✅ Complete | Returns comments |
+| `POST /api/comments` | ✅ Complete | Implemented |
+| `POST /api/comments/[id]/reply` | ✅ Complete | Implemented |
+| `POST /api/engagement/react` | ✅ Complete | Creates reaction |
+| `DELETE /api/engagement/react` | ✅ Complete | Deletes reaction |
+| `POST /api/engagement/save` | ✅ Complete | Saves paper |
+| `DELETE /api/engagement/save` | ✅ Complete | Unsaves paper |
+| `GET /api/engagement/follow` | ✅ Complete | Follow logic |
 
 **What's Missing:**
-- Create/delete comments on papers
-- React with emotions (like, love)
-- Save/unsave papers
-- Follow/unfollow users
-- Get user's saved papers
+- Get user's saved papers (dedicated endpoint)
 
 ---
 
@@ -352,15 +289,11 @@ enum PaperStatus {
 
 | Endpoint | Implementation | Status |
 |-----------|---|---|
-| `GET /api/search` | ⚠️ Partial | Hardcoded category mapping |
+| `GET /api/search` | ✅ Complete | Full-text search and filters |
 | `GET /api/categories` | ✅ Works | Returns all categories |
 
 **What's Missing:**
-- Full-text search integration
-- Filter by multiple criteria (university, department, year, category)
-- Pagination support
-- Sorting options (relevance, date, views)
-- Advanced search filters
+- Advanced search filters (frontend integration)
 
 ---
 
@@ -368,39 +301,27 @@ enum PaperStatus {
 
 | Endpoint | Implementation | Status |
 |-----------|---|---|
-| `GET /api/admin/pending` | ⚠️ Partial | Works but enum issues |
-| `POST /api/admin/papers/[id]/approve` | ⚠️ Partial | Has enum & import bugs |
-| `POST /api/admin/papers/[id]/reject` | ⚠️ Partial | Needs verification |
+| `GET /api/admin/pending` | ✅ Works | Proper enum implementation |
+| `POST /api/admin/papers/[id]/approve` | ✅ Works | Resolved bugs |
+| `POST /api/admin/papers/[id]/reject` | ✅ Works | Resolved bugs |
 | `GET /api/admin/users` | ✅ Works | Returns user list |
 | `GET /api/admin/dashboard` | ⚠️ Partial | Mock stats |
 
 **What's Missing:**
 - Dashboard statistics (real data)
 - User suspension/management
-- ModerationLog tracking
-- Moderation history
 
 ---
 
-### ❌ Core Features Not Connected (85% Missing)
+### ❌ Core Features Not Connected (40% Missing)
 
-#### 1. Search (15% Complete)
+#### 1. Search (100% Complete Backend)
 
 **UI:** ✅ Complete  
-**API:** ⚠️ Partial (mock data only)
-
-**What's Missing:**
-- Full-text search on paper title, abstract, keywords
-- Filter by university, department, category
-- Filter by date range
-- Pagination
-- Sorting (recent, most viewed, trending)
+**API:** ✅ Complete (filtering, sorting, FTS)
 
 **Required Implementation:**
-- [ ] Query builder with PostgreSQL FTS
-- [ ] Index optimization for search
-- [ ] Filtering logic
-- [ ] Pagination in API
+- [ ] Connect UI to the new fully functioning search API
 
 ---
 
@@ -491,15 +412,17 @@ enum PaperStatus {
 
 ### 🟡 Module Layer (Partial Implementation)
 
+### 🟡 Module Layer (Partial Implementation)
+
 **Current State:**
-- ✅ [src/modules/auth/](src/modules/auth/) - Service & Repository complete
-- ⚠️ [src/modules/paper/](src/modules/paper/) - Repository exists, Service partial
-- ❌ [src/modules/search/](src/modules/search/) - Minimal implementation
-- ❌ [src/modules/engagement/](src/modules/engagement/) - Not implemented
-- ❌ [src/modules/moderation/](src/modules/moderation/) - Not implemented
-- ❌ [src/modules/analytics/](src/modules/analytics/) - Not implemented
-- ❌ [src/modules/notification/](src/modules/notification/) - Not implemented
-- ❌ [src/modules/user/](src/modules/user/) - Not implemented
+- ✅ `src/modules/auth/` - Service & Repository complete
+- ✅ `src/modules/paper/` - Repository and API connected
+- ✅ `src/modules/search/` - Repository connected with FTS
+- ✅ `src/modules/engagement/` - Backend implemented
+- ✅ `src/modules/moderation/` - Bugfixes implemented
+- ❌ `src/modules/analytics/` - Not implemented
+- ❌ `src/modules/notification/` - Not implemented
+- ❌ `src/modules/user/` - Not implemented
 
 **Required:**
 Each module should have:
@@ -539,80 +462,49 @@ Each module should have:
 
 ## 🚀 Recommended Implementation Plan (Priority Order)
 
-### **Phase 2A — Foundation & Critical Fixes (Week 1)**
+### **Phase 2C — User Profiles & Paper Finalization (Current)**
 
-**PRIORITY 1: Fix Critical Bugs** (1-2 days)
-- [ ] Fix enum mismatch (PaperStatus values)
-- [ ] Fix import paths (@/lib/db vs @/lib/prisma)
-- [ ] Remove JWT from localStorage
-- [ ] Test auth flow end-to-end
+**PRIORITY 1: User Profile & Settings** (2-3 days)
+- [ ] User profile API (`/api/users/[id]`)
+- [ ] User settings API (`/api/users/settings`)
+- [ ] Account Settings UI
+- [ ] Public User Profile UI
 
-**PRIORITY 2: Paper API Completion** (2-3 days)
-- [ ] `GET /api/papers/[id]` - Fetch paper with versions
+**PRIORITY 2: Finalizing Paper Actions** (2 days)
 - [ ] `PUT /api/papers/[id]` - Update draft metadata
-- [ ] `POST /api/papers/[id]/submit` - Change status to pending
-- [ ] `GET /api/papers/mine` - Get user's papers with real data
-- [ ] Add pagination to list endpoints
-
-**PRIORITY 3: Search API** (2 days)
-- [ ] Implement full-text search
-- [ ] Add filtering (university, department, category, year)
-- [ ] Add sorting (relevance, date, views)
-- [ ] Test with real data
+- [ ] `POST /api/papers/[id]/submit` - Transition to pending
 
 **Estimated Time:** 1 week  
 **Dependencies:** None (can start immediately)
 
 ---
 
-### **Phase 2B — Engagement & User Features (Week 2)**
+### **Phase 3 — Notifications, Analytics & Production (Upcoming)**
 
-**PRIORITY 4: Engagement APIs** (3 days)
-- [ ] Comments: POST, GET, DELETE
-- [ ] Reactions: POST (create), DELETE (remove)
-- [ ] Save papers: POST, DELETE, GET user's saved
-- [ ] Follow users: POST (follow), DELETE (unfollow), GET suggestions
-
-**PRIORITY 5: User Module** (2 days)
-- [ ] User profile API
-- [ ] User statistics API
-- [ ] User papers API
-- [ ] User following/followers API
-
-**PRIORITY 6: Paper Detail Page** (2 days)
-- [ ] Create `/papers/[id]` page
-- [ ] PDF viewer integration
-- [ ] Comments section
-- [ ] Related papers
-- [ ] Share buttons
-
-**Estimated Time:** 1 week  
-**Dependencies:** Paper API completion (Phase 2A)
-
----
-
-### **Phase 2C — Admin & Moderation (Week 3)**
-
-**PRIORITY 7: Admin APIs** (2 days)
-- [ ] Fix approve/reject endpoints
-- [ ] Create moderation history tracking
-- [ ] Add ModerationLog entries
-- [ ] Implement user suspension
-
-**PRIORITY 8: Analytics** (2 days)
+**PRIORITY 3: Analytics** (2 days)
 - [ ] Track paper views
 - [ ] Track downloads
 - [ ] Aggregate statistics
 - [ ] Dashboard real data
 
-**PRIORITY 9: Notifications** (2 days)
+**PRIORITY 4: Notifications** (2 days)
 - [ ] Create notification trigger system
 - [ ] Implement notification API
 - [ ] Add notification UI
 - [ ] Email notifications
 
 **Estimated Time:** 1 week  
-**Dependencies:** Engagement API (Phase 2B)
+**Dependencies:** None
+
+---
+
+### **Phase 4 — Polish & DevOps (Final)**
+
+**PRIORITY 5: DevOps & Testing**
+- [ ] Unit & Integration testing
+- [ ] Docker configuration
+- [ ] Production checklist
+- [ ] Deployment guide (`docs/devops/deployment.md`)
 
 ---
 
@@ -742,5 +634,5 @@ For security questions, see [security-guidelines.md](docs/engineering/security-g
 
 ---
 
-**Last Analysis:** May 7, 2026  
-**Next Review:** After Phase 2A completion
+**Last Analysis:** May 17, 2026  
+**Next Review:** After Phase 2C completion

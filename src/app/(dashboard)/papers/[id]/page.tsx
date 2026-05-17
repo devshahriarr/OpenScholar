@@ -1,6 +1,7 @@
 import { getPaperById, getRelatedPapers } from "@/modules/paper/repository";
 import PaperClientView from "@/components/paper/PaperClientView";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 export default async function PaperDetailsPage({
   params,
@@ -12,10 +13,13 @@ export default async function PaperDetailsPage({
 
   // Basic UUID validation to prevent Prisma errors
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(id) && id !== "1") { // Allowing "1" for potential demo/legacy IDs
-    // But if it's not a UUID and not 1, it's definitely not found
-    // Actually, let's just let getPaperById handle it if it's a string, 
-    // but Prisma will throw if it expects UUID format.
+  // if (!uuidRegex.test(id) && id !== "1") { // Allowing "1" for potential demo/legacy IDs
+  //   // But if it's not a UUID and not 1, it's definitely not found
+  //   // Actually, let's just let getPaperById handle it if it's a string, 
+  //   // but Prisma will throw if it expects UUID format.
+  // }
+  if (!uuidRegex.test(id)) {
+    notFound();
   }
 
   try {
@@ -25,7 +29,11 @@ export default async function PaperDetailsPage({
     console.log(`[DEBUG] Paper data found: ${!!paperData}`);
 
     if (!paperData) {
-      notFound();
+      return (
+        <div className="p-10">
+          <h1 className="text-2xl font-bold">Paper not found</h1>
+        </div>
+      );
     }
 
     // 2. Fetch Related Papers

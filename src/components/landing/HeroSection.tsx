@@ -41,10 +41,9 @@ export default function HeroSection() {
             <div className="relative w-full aspect-[16/11] lg:rounded-none rounded-xl overflow-hidden lg:mt-0">
               <Image
                 src="/hero-vortex.png"
-                alt="Digital research vortex visualization"
                 fill
-                className="object-cover"
-                priority
+                sizes="100vw"
+                alt="Hero background"
               />
             </div>
           </div>

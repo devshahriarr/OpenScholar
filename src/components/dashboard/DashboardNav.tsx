@@ -1,8 +1,28 @@
 import Link from "next/link";
 import { BookOpen, Bell } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import ProfileDropdown from "./ProfileDropdown";
+import { getSessionUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
-export default function DashboardNav() {
+export default async function DashboardNav() {
+  const session = await getSessionUser();
+  let userProps = null;
+
+  if (session) {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.sub },
+      select: { name: true }
+    });
+    
+    if (dbUser) {
+      userProps = {
+        id: session.sub,
+        name: dbUser.name,
+        initials: dbUser.name.charAt(0).toUpperCase()
+      };
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -37,12 +57,7 @@ export default function DashboardNav() {
             <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
           </button>
           
-          <Link href="/profile" className="flex items-center gap-2 pl-2 border-l border-border hover:opacity-80 transition-opacity">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-sm font-semibold shadow-sm">
-              J
-            </div>
-            <span className="text-sm font-semibold text-text-primary hidden sm:block">John Doe</span>
-          </Link>
+          <ProfileDropdown user={userProps} />
         </div>
       </div>
     </header>
