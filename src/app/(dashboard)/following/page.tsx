@@ -31,8 +31,8 @@ export default async function FollowingPage() {
       keywords: v.keywords
     })),
     metrics: { 
-      viewCount: paper.metrics?.views || 0, 
-      downloadCount: paper.metrics?.downloads || 0 
+      viewCount: paper.metrics?.viewCount || 0, 
+      downloadCount: paper.metrics?.downloadCount || 0 
     }
   }));
 
@@ -40,8 +40,8 @@ export default async function FollowingPage() {
   const formattedSuggestions = suggestions.map(s => ({
     id: s.id,
     name: s.name,
-    avatarUrl: s.avatarUrl,
-    institution: s.author?.institution || "Research Institution",
+    avatarUrl: s.profileImageUrl || undefined,
+    institution: s.university?.name || "Research Institution",
     thesisCount: s._count.papers,
     viewCount: Math.floor(Math.random() * 5000), // Placeholder as it's not in the simple count
   }));

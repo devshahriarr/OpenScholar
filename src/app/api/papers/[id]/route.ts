@@ -34,8 +34,8 @@ export async function GET(
       publishedAt: paper.createdAt.toISOString(),
       tags: latestVersion?.keywords || [],
       metrics: {
-        views: paper.metrics?.views || 0,
-        downloads: paper.metrics?.downloads || 0,
+        views: paper.metrics?.viewCount || 0,
+        downloads: paper.metrics?.downloadCount || 0,
         likes: paper.reactionCount || 0,
         comments: paper.commentCount || 0
       },

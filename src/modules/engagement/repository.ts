@@ -251,6 +251,7 @@ export async function getSuggestedResearchers(userId: string, limit: number = 5)
     },
     include: {
       author: true,
+      university: true,
       _count: {
         select: { papers: true }
       }
@@ -266,6 +267,7 @@ export async function getSuggestedResearchers(userId: string, limit: number = 5)
       },
       include: {
         author: true,
+        university: true,
         _count: {
           select: { papers: true }
         }

@@ -11,7 +11,13 @@ async function main() {
     create: {
       email: "test@example.com",
       name: "Shahriar Hossain",
-      password: "hashed_password", // In real app, this should be hashed
+      passwordHash: "hashed_password", // In real app, this should be hashed
+      role: {
+        connectOrCreate: {
+          where: { name: "student" },
+          create: { name: "student" }
+        }
+      }
     },
   });
 
@@ -42,8 +48,9 @@ async function main() {
       },
       metrics: {
         create: {
-          views: 120,
-          downloads: 45,
+          viewCount: 120,
+          downloadCount: 45,
+          updatedAt: new Date(),
         }
       }
     },

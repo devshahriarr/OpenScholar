@@ -84,9 +84,9 @@ export async function moderatePaper(
   action: ModerationAction, 
   reason?: string
 ) {
-  return prisma.$transaction(async (tx) => {
+  const paper = await prisma.$transaction(async (tx) => {
     // 1. Update paper status
-    const paper = await tx.paper.update({
+    const updated = await tx.paper.update({
       where: { id: paperId },
       data: {
         status: action === ModerationAction.approved ? PaperStatus.approved : PaperStatus.rejected
@@ -103,7 +103,7 @@ export async function moderatePaper(
       }
     });
 
-    // 3. If approved, make sure the version is marked as published if it's the first one
+    // 3. If approved, mark all versions as published
     if (action === ModerationAction.approved) {
       await tx.paperVersion.updateMany({
         where: { paperId },
@@ -111,6 +111,21 @@ export async function moderatePaper(
       });
     }
 
-    return paper;
+    return updated;
   });
+
+  // 4. Fire notification to the paper author (non-blocking)
+  const { createNotification } = await import("@/modules/notification/repository");
+  const isApproved = action === ModerationAction.approved;
+  createNotification(
+    paper.createdBy,
+    isApproved ? "paper_approved" : "paper_rejected",
+    isApproved
+      ? "🎉 Your paper has been approved and is now live on OpenScholar!"
+      : `Your paper was not approved.${reason ? ` Reason: ${reason}` : " Please review and resubmit."}`,
+    paperId
+  ).catch((err) => console.error("[NOTIFICATION_CREATE_ERROR]", err));
+
+  return paper;
 }
+

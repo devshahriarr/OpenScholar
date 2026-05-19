@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const mockRelated = Array.from({ length: 3 }).map((_, i) => ({
     id: `related-${i}`,
     title: "Deep Learning Applications in Natural Language Processing",

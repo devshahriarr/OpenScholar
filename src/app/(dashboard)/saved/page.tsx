@@ -25,8 +25,8 @@ export default async function SavedPage() {
       keywords: v.keywords
     })),
     metrics: { 
-      viewCount: paper.metrics?.views || 0, 
-      downloadCount: paper.metrics?.downloads || 0 
+      viewCount: paper.metrics?.viewCount || 0, 
+      downloadCount: paper.metrics?.downloadCount || 0 
     }
   }));
 

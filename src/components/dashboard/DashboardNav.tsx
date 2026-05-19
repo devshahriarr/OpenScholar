@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { BookOpen, Bell } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import ProfileDropdown from "./ProfileDropdown";
+import NotificationBell from "./NotificationBell";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -52,10 +53,7 @@ export default async function DashboardNav() {
 
         {/* Right actions */}
         <div className="flex items-center gap-4">
-          <button aria-label="Notifications" className="p-2 text-text-secondary hover:bg-primary-light hover:text-primary rounded-full transition-all relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
-          </button>
+          <NotificationBell />
           
           <ProfileDropdown user={userProps} />
         </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Upload, BarChart3, Eye, Download, MessageSquare, Calendar, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import UploadBanner from "@/components/dashboard/UploadBanner";
 
 interface Paper {
   id: string;
@@ -128,17 +129,8 @@ export default function MyUploadsPage() {
       </div>
 
       {/* Banner */}
-      <div className="bg-primary rounded-2xl p-8 mb-12 flex flex-col md:flex-row justify-between items-center gap-6 shadow-lg shadow-primary/20">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Share Your Research with the World</h2>
-          <p className="text-primary-light/80 text-sm">Upload your thesis and make it accessible to researchers globally</p>
-        </div>
-        <Link href="/papers/upload">
-          <button className="bg-white text-primary px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-light transition-all shadow-md active:scale-95 whitespace-nowrap">
-            <Upload size={20} />
-            Upload Thesis
-          </button>
-        </Link>
+      <div className="mb-12">
+        <UploadBanner />
       </div>
 
       {/* Papers List */}

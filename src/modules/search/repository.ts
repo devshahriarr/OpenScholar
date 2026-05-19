@@ -106,8 +106,8 @@ export async function searchPapers(filters: SearchFilters): Promise<SearchRespon
           },
           abstract: latestVersion?.abstract || "No abstract available.",
           tags: latestVersion?.keywords || [],
-          views: paper.metrics?.views || 0,
-          downloads: paper.metrics?.downloads || 0,
+          views: paper.metrics?.viewCount || 0,
+          downloads: paper.metrics?.downloadCount || 0,
           comments: paper.commentCount || 0,
           publishedAt: paper.createdAt.toISOString(),
         };

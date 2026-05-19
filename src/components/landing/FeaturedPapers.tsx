@@ -2,50 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Paper } from "@/types/paper";
 import PaperCard from "./PaperCard";
 import PaperCardSkeleton from "./PaperCardSkeleton";
-
-// Fallback data so the page is never empty
-const FALLBACK_PAPERS: Paper[] = [
-  {
-    id: "1",
-    title: "Deep Learning Applications in Natural Language Processing",
-    category: "Computer Science",
-    author: { name: "Sarah Johnson", institution: "MIT" },
-    abstract:
-      "This thesis explores the recent advancements in deep learning techniques applied to natural language processing tasks including sentiment analysis, machine translation, and text generation.",
-    tags: ["AI", "Deep Learning", "NLP"],
-    views: 1245,
-    comments: 342,
-    publishedAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    title: "Deep Learning Applications in Natural Language Processing",
-    category: "Computer Science",
-    author: { name: "Sarah Johnson", institution: "Stanford" },
-    abstract:
-      "This thesis explores the recent advancements in deep learning techniques applied to natural language processing tasks including sentiment analysis, machine translation, and text generation.",
-    tags: ["AI", "Deep Learning", "NLP"],
-    views: 1245,
-    comments: 342,
-    publishedAt: "2024-01-15",
-  },
-  {
-    id: "3",
-    title: "Deep Learning Applications in Natural Language Processing",
-    category: "Computer Science",
-    author: { name: "Sarah Johnson", institution: "Harvard" },
-    abstract:
-      "This thesis explores the recent advancements in deep learning techniques applied to natural language processing tasks including sentiment analysis, machine translation, and text generation.",
-    tags: ["AI", "Deep Learning", "NLP"],
-    views: 1245,
-    comments: 342,
-    publishedAt: "2024-01-15",
-  },
-];
 
 export default function FeaturedPapers() {
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -53,13 +13,11 @@ export default function FeaturedPapers() {
 
   useEffect(() => {
     fetch("/api/papers/featured")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setPapers(data?.data ?? FALLBACK_PAPERS))
-      .catch(() => setPapers(FALLBACK_PAPERS))
+      .then((r) => (r.ok ? r.json() : { data: [] }))
+      .then((json) => setPapers(json?.data ?? []))
+      .catch(() => setPapers([]))
       .finally(() => setIsLoading(false));
   }, []);
-
-  const displayPapers = papers.length > 0 ? papers : FALLBACK_PAPERS;
 
   return (
     <section id="featured" className="bg-surface py-16">
@@ -73,7 +31,7 @@ export default function FeaturedPapers() {
             </p>
           </div>
           <Link
-            href="/papers"
+            href="/search"
             className="hidden sm:flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover transition-colors"
           >
             View all <ArrowRight className="h-3.5 w-3.5" />
@@ -82,17 +40,33 @@ export default function FeaturedPapers() {
 
         {/* Papers grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading
-            ? Array.from({ length: 3 }).map((_, i) => <PaperCardSkeleton key={i} />)
-            : displayPapers.slice(0, 3).map((paper) => (
-                <PaperCard key={paper.id} paper={paper} />
-              ))}
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => <PaperCardSkeleton key={i} />)
+          ) : papers.length > 0 ? (
+            papers.slice(0, 3).map((paper) => (
+              <PaperCard key={paper.id} paper={paper} />
+            ))
+          ) : (
+            <div className="col-span-3 flex flex-col items-center justify-center py-16 text-center">
+              <BookOpen className="w-12 h-12 text-text-muted opacity-30 mb-4" />
+              <p className="text-base font-semibold text-text-primary">No featured papers yet</p>
+              <p className="text-sm text-text-secondary mt-1 mb-4">
+                Be the first to publish on OpenScholar.
+              </p>
+              <Link
+                href="/search"
+                className="text-sm font-bold text-primary hover:underline underline-offset-4"
+              >
+                Browse all research →
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile view all */}
         <div className="mt-8 text-center sm:hidden">
           <Link
-            href="/papers"
+            href="/search"
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary-hover"
           >
             View all papers <ArrowRight className="h-3.5 w-3.5" />

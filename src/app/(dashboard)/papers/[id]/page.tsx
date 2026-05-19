@@ -82,12 +82,12 @@ export default async function PaperDetailsPage({
       publishedAt: paperData.createdAt.toISOString(),
       tags: latestVersion?.keywords || [],
       metrics: {
-        views: paperData.metrics?.views || 0,
-        downloads: paperData.metrics?.downloads || 0,
+        views: paperData.metrics?.viewCount || 0,
+        downloads: paperData.metrics?.downloadCount || 0,
         likes: paperData.reactionCount || 0,
         comments: paperData.commentCount || 0,
       },
-      fullText: latestVersion?.content || undefined,
+      fullText: latestVersion?.abstract || undefined,
       pdfUrl: latestVersion?.pdfUrl || "#",
     };
 
@@ -99,8 +99,8 @@ export default async function PaperDetailsPage({
       publishedAt: rp.createdAt.toISOString(),
       tags: rp.versions[0]?.keywords || [],
       metrics: {
-        views: rp.metrics?.views || 0,
-        downloads: rp.metrics?.downloads || 0,
+        views: rp.metrics?.viewCount || 0,
+        downloads: rp.metrics?.downloadCount || 0,
         likes: rp.reactionCount || 0,
         comments: rp.commentCount || 0,
       },
@@ -125,7 +125,9 @@ export default async function PaperDetailsPage({
           We couldn't load the details for this paper. It might have been removed or the ID is incorrect.
         </p>
         <Link href="/search">
-          <Button variant="primary">Return to Discovery</Button>
+          <button className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary-dark transition-all">
+            Return to Discovery
+          </button>
         </Link>
       </div>
     );
