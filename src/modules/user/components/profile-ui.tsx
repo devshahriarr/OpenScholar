@@ -38,13 +38,48 @@ export function ProfileHeader({ user, isEditing, onEdit }: { user: any, isEditin
         <div className="relative flex flex-col md:flex-row md:items-end justify-between -mt-16 gap-6">
           <div className="flex flex-col md:flex-row md:items-end gap-6">
             {/* Avatar */}
-            <div className="relative">
-              <div className="w-36 h-36 rounded-full bg-surface border-[6px] border-surface shadow-lg flex items-center justify-center text-5xl font-bold text-primary uppercase">
-                {user.name?.[0] || "?"}
-              </div>
-              <button className="absolute bottom-2 right-2 p-2.5 bg-primary text-white rounded-full shadow-md border-2 border-surface hover:bg-primary-hover transition-all">
-                <Camera size={18} />
-              </button>
+            <div className="relative group">
+              {user.avatarUrl || user.profileImageUrl ? (
+                <img
+                  src={user.avatarUrl || user.profileImageUrl}
+                  alt={user.name}
+                  className="w-36 h-36 rounded-full object-cover bg-surface border-[6px] border-surface shadow-lg"
+                />
+              ) : (
+                <div className="w-36 h-36 rounded-full bg-surface border-[6px] border-surface shadow-lg flex items-center justify-center text-5xl font-bold text-primary uppercase">
+                  {user.name?.[0] || "?"}
+                </div>
+              )}
+              {onEdit && (
+                <button 
+                  onClick={async () => {
+                    const url = window.prompt("Enter new avatar image URL:", user.avatarUrl || user.profileImageUrl || "");
+                    if (url === null) return; // Cancelled
+                    
+                    try {
+                      const res = await fetch("/api/users/settings", {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ profileImageUrl: url }),
+                      });
+                      if (res.ok) {
+                        window.location.reload();
+                      } else {
+                        alert("Failed to update avatar.");
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      alert("An error occurred while updating avatar.");
+                    }
+                  }}
+                  className="absolute bottom-2 right-2 p-2.5 bg-primary text-white rounded-full shadow-md border-2 border-surface hover:bg-primary-hover transition-all hover:scale-110 active:scale-95"
+                  title="Update profile picture"
+                >
+                  <Camera size={18} />
+                </button>
+              )}
             </div>
             
             {/* Name and Info */}

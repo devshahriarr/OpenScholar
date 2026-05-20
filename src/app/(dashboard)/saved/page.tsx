@@ -7,7 +7,7 @@ import { getSavedPapers } from "@/modules/engagement/repository";
 export default async function SavedPage() {
   const user = await getSessionUser();
   if (!user) {
-    redirect("/auth/login");
+    redirect("/login");
   }
 
   const savedPapers = await getSavedPapers(user.sub);

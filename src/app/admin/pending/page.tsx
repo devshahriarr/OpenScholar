@@ -24,10 +24,6 @@ export default function PendingApprovalsPage() {
   const [selectedPaper, setSelectedPaper] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -43,6 +39,12 @@ export default function PendingApprovalsPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchData();
+    });
+  }, []);
 
   const handleModerate = async (paperId: string, action: "approved" | "rejected") => {
     setIsProcessing(true);

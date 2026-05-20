@@ -29,8 +29,10 @@ export async function getUserProfile(userId: string) {
 
   let totalViews = 0;
   let totalDownloads = 0;
+  let totalLikes = 0;
 
   for (const p of papers) {
+    totalLikes += p.reactionCount || 0;
     if (p.metrics) {
       totalViews += p.metrics.viewCount || 0;
       totalDownloads += p.metrics.downloadCount || 0;
@@ -45,11 +47,12 @@ export async function getUserProfile(userId: string) {
     university: user.university?.name,
     department: user.department?.name,
     stats: {
-      followers: user._count.followers,
-      following: user._count.following,
+      followers: user._count.followers, // people following this user
+      following: user._count.following, // people this user is following
       papers: user._count.papers,
       views: totalViews,
-      downloads: totalDownloads
+      downloads: totalDownloads,
+      likes: totalLikes
     },
     joinedAt: user.createdAt
   };

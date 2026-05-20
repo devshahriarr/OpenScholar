@@ -32,7 +32,7 @@ export default async function DashboardNav() {
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary">
             <BookOpen className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-semibold text-text-primary">ThesisLib</span>
+          <span className="text-lg font-semibold text-text-primary">OpenScholar</span>
         </Link>
 
         {/* Center links (desktop) */}
@@ -40,20 +40,24 @@ export default async function DashboardNav() {
           <Link href="/search" className="text-sm font-medium text-primary hover:text-primary-hover transition-colors">
             Discovery
           </Link>
-          <Link href="/following" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
-            Following
-          </Link>
-          <Link href="/my-uploads" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
-            My Uploads
-          </Link>
-          <Link href="/saved" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
-            Saved
-          </Link>
+          {session && (
+            <>
+              <Link href="/following" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+                Following
+              </Link>
+              <Link href="/my-uploads" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+                My Uploads
+              </Link>
+              <Link href="/saved" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+                Saved
+              </Link>
+            </>
+          )}
         </nav>
 
         {/* Right actions */}
         <div className="flex items-center gap-4">
-          <NotificationBell />
+          {session && <NotificationBell />}
           
           <ProfileDropdown user={userProps} />
         </div>
@@ -61,3 +65,4 @@ export default async function DashboardNav() {
     </header>
   );
 }
+

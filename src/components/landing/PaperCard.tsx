@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { Eye, MessageSquare, BookmarkPlus } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, MessageSquare, BookmarkPlus, BookmarkCheck, Download } from "lucide-react";
 import { Paper } from "@/types/paper";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -17,6 +21,33 @@ function formatDate(dateStr: string): string {
 }
 
 export default function PaperCard({ paper }: PaperCardProps) {
+  const [isSaved, setIsSaved] = useState(false);
+  const router = useRouter();
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const res = await fetch("/api/engagement/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paperId: paper.id }),
+      });
+
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      if (res.ok) {
+        setIsSaved(!isSaved);
+      }
+    } catch (error) {
+      console.error("Failed to save paper:", error);
+    }
+  };
+
   return (
     <article className="flex flex-col rounded-lg border border-border bg-background shadow-card overflow-hidden hover:shadow-md transition-shadow">
       {/* Card header — indigo */}
@@ -25,10 +56,13 @@ export default function PaperCard({ paper }: PaperCardProps) {
           {paper.title}
         </h3>
         <button
+          onClick={handleSave}
           aria-label="Save paper"
-          className="absolute top-3 right-3 text-white/60 hover:text-white transition-colors"
+          className={`absolute top-3 right-3 transition-all hover:scale-110 active:scale-95 ${
+            isSaved ? "text-yellow-400" : "text-white/60 hover:text-white"
+          }`}
         >
-          <BookmarkPlus className="h-4 w-4" />
+          {isSaved ? <BookmarkCheck className="h-5 w-5" /> : <BookmarkPlus className="h-4 w-4" />}
         </button>
       </div>
 
@@ -76,6 +110,10 @@ export default function PaperCard({ paper }: PaperCardProps) {
             {paper.views.toLocaleString()}
           </span>
           <span className="flex items-center gap-1">
+            <Download className="h-3 w-3" />
+            {(paper.downloads ?? 0).toLocaleString()}
+          </span>
+          <span className="flex items-center gap-1">
             <MessageSquare className="h-3 w-3" />
             {paper.comments}
           </span>
@@ -84,18 +122,13 @@ export default function PaperCard({ paper }: PaperCardProps) {
 
         {/* View button */}
         <Link 
-            href={`/papers/${paper.id}`}
-            className="text-primary text-[11px] font-extrabold flex items-center gap-1 hover:underline underline-offset-4 whitespace-nowrap"
-          >
-            View Thesis
-          </Link>
-
-        {/* <Link href={`/papers/${paper.id}`} className="mt-auto">
-          <Button variant="primary" size="sm" className="w-full" aria-label={`View thesis: ${paper.title}`}>
-            View Thesis
-          </Button>
-        </Link> */}
+          href={`/papers/${paper.id}`}
+          className="text-primary text-[11px] font-extrabold flex items-center gap-1 hover:underline underline-offset-4 whitespace-nowrap"
+        >
+          View Thesis
+        </Link>
       </div>
     </article>
   );
 }
+

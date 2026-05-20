@@ -187,8 +187,15 @@ export default function PaperClientView({
             <BookOpen className="h-7 w-7" />
           </button>
           
-          <button className="p-2 text-primary hover:bg-primary/5 rounded-full transition-colors" title="Save paper">
-            <BookmarkPlus className="h-7 w-7" />
+          <button 
+            onClick={handleSave}
+            className={cn(
+              "p-2 rounded-full transition-colors",
+              isSaved ? "bg-primary/10 text-primary" : "text-primary hover:bg-primary/5"
+            )}
+            title="Save paper"
+          >
+            <BookmarkPlus className={cn("h-7 w-7", isSaved && "fill-current")} />
           </button>
 
           {viewMode === "abstract" && (
@@ -222,6 +229,14 @@ export default function PaperClientView({
                   onLike={handleLike} 
                   onSave={handleSave}
                   onShare={handleShare}
+                  onComment={() => {
+                    const commentBox = document.getElementById("comment-box");
+                    if (commentBox) {
+                      commentBox.scrollIntoView({ behavior: "smooth" });
+                      const textarea = commentBox.querySelector("textarea");
+                      if (textarea) textarea.focus();
+                    }
+                  }}
                 />
                 <CommentSection 
                   comments={comments} 
@@ -396,7 +411,8 @@ function EngagementBar({
   isSaved,
   onLike, 
   onSave,
-  onShare 
+  onShare,
+  onComment
 }: { 
   metrics: PaperDetails["metrics"]; 
   isLiked: boolean;
@@ -404,6 +420,7 @@ function EngagementBar({
   onLike: () => void;
   onSave: () => void;
   onShare: () => void;
+  onComment: () => void;
 }) {
   return (
     <div className="space-y-3 pt-4">
@@ -423,7 +440,10 @@ function EngagementBar({
           <ThumbsUp className={cn("h-[18px] w-[18px]", isLiked && "fill-current")} />
           Like
         </button>
-        <button className="flex items-center gap-2.5 text-[14px] font-semibold text-[#5F6368] hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/5">
+        <button 
+          onClick={onComment}
+          className="flex items-center gap-2.5 text-[14px] font-semibold text-[#5F6368] hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/5"
+        >
           <MessageSquare className="h-[18px] w-[18px]" />
           Comment
         </button>
@@ -461,7 +481,7 @@ function CommentSection({
   onAddComment: () => void;
 }) {
   return (
-    <div className="space-y-8">
+    <div id="comment-box" className="space-y-8">
       {/* Comment Input Box */}
       <div className="bg-[#F8F9FA] rounded-[18px] p-6 border border-[#F1F3F5] space-y-4 shadow-sm">
         <label className="text-[13px] font-bold text-[#5F6368] tracking-wide uppercase">Thought Your Comment</label>
@@ -486,9 +506,17 @@ function CommentSection({
       <div className="space-y-8 pt-2">
         {comments.map((comment) => (
           <div key={comment.id} className="flex gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="w-[42px] h-[42px] rounded-full bg-[#1A73E8] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
-              {comment.user.name.charAt(0)}
-            </div>
+            {comment.user.avatarUrl ? (
+              <img 
+                src={comment.user.avatarUrl} 
+                alt={comment.user.name} 
+                className="w-[42px] h-[42px] rounded-full object-cover flex-shrink-0 shadow-sm" 
+              />
+            ) : (
+              <div className="w-[42px] h-[42px] rounded-full bg-[#1A73E8] flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm animate-in zoom-in-50 duration-200">
+                {comment.user.name.charAt(0)}
+              </div>
+            )}
             <div className="flex-1 space-y-2">
               <div className="flex items-baseline gap-2.5">
                 <span className="font-bold text-[15px] text-text-primary">{comment.user.name}</span>
@@ -559,7 +587,7 @@ function AuthorCard({
           <span className="text-[#5F6368] text-[11px] uppercase tracking-wider">Follower</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-text-primary">4k+</span>
+          <span className="text-text-primary">{author.likes || 0}</span>
           <span className="text-[#5F6368] text-[11px] uppercase tracking-wider">Like</span>
         </div>
       </div>
@@ -574,15 +602,20 @@ function RelatedPapers({ papers }: { papers: PaperDetails[] }) {
       <div className="space-y-0">
         {papers.map((paper, i) => (
           <div key={paper.id} className={cn("py-5 border-b border-[#F1F3F5] last:border-0", i === 0 ? "pt-0" : "")}>
-            <h5 className="text-[14px] font-bold text-text-primary leading-[1.4] mb-3 line-clamp-2">
-              {paper.title}
-            </h5>
+            <Link href={`/papers/${paper.id}`} className="group block">
+              <h5 className="text-[14px] font-bold text-text-primary leading-[1.4] mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                {paper.title}
+              </h5>
+            </Link>
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-bold text-[#5F6368]">{paper.authors[0].name}</span>
-              <button className="text-[12px] font-bold text-[#1A73E8] hover:text-[#1557B0] transition-colors flex items-center gap-1.5 group">
-                View PDF
+              <Link 
+                href={`/papers/${paper.id}`}
+                className="text-[12px] font-bold text-[#1A73E8] hover:text-[#1557B0] transition-colors flex items-center gap-1.5 group"
+              >
+                View Thesis
                 <span className="text-[16px] leading-none transition-transform group-hover:translate-x-1">&rsaquo;</span>
-              </button>
+              </Link>
             </div>
           </div>
         ))}

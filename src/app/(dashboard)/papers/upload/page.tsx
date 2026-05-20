@@ -237,7 +237,7 @@ export default function PaperUploadPage() {
             </div>
             <h2 className="text-3xl font-extrabold text-text-primary mb-4">Paper Submitted Successfully!</h2>
             <p className="text-text-secondary max-w-md mx-auto mb-10">
-              Your paper has been submitted for review. You'll receive an email notification once the review process begins.
+              Your paper has been submitted for review. You&apos;ll receive an email notification once the review process begins.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link href="/my-uploads" className="bg-gradient-to-r from-primary to-secondary text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95">

@@ -12,7 +12,7 @@ export default function Navbar() {
             <BookOpen className="h-4 w-4 text-white" />
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold text-text-primary">Research Portal</p>
+            <p className="text-sm font-semibold text-text-primary">OpenScholar</p>
             <p className="text-[10px] text-text-secondary">Academic Excellence</p>
           </div>
         </Link>
@@ -40,3 +40,4 @@ export default function Navbar() {
     </header>
   );
 }
+

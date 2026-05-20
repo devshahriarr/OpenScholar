@@ -55,6 +55,7 @@ export async function addComment(userId: string, paperId: string, content: strin
           select: {
             id: true,
             name: true,
+            profileImageUrl: true,
           }
         }
       }
@@ -117,6 +118,7 @@ export async function getPaperComments(paperId: string) {
         select: {
           id: true,
           name: true,
+          profileImageUrl: true,
         }
       },
       replies: {
@@ -125,6 +127,7 @@ export async function getPaperComments(paperId: string) {
             select: {
               id: true,
               name: true,
+              profileImageUrl: true,
             }
           }
         }
@@ -252,6 +255,10 @@ export async function getSuggestedResearchers(userId: string, limit: number = 5)
     include: {
       author: true,
       university: true,
+      papers: {
+        where: { isDeleted: false, status: "approved" },
+        include: { metrics: true }
+      },
       _count: {
         select: { papers: true }
       }
@@ -268,6 +275,10 @@ export async function getSuggestedResearchers(userId: string, limit: number = 5)
       include: {
         author: true,
         university: true,
+        papers: {
+          where: { isDeleted: false, status: "approved" },
+          include: { metrics: true }
+        },
         _count: {
           select: { papers: true }
         }
@@ -277,5 +288,22 @@ export async function getSuggestedResearchers(userId: string, limit: number = 5)
     suggestions = [...suggestions, ...additional];
   }
 
-  return suggestions;
+  return suggestions.map(user => {
+    let viewCount = 0;
+    if (user.papers) {
+      for (const p of user.papers) {
+        if (p.metrics) {
+          viewCount += p.metrics.viewCount || 0;
+        }
+      }
+    }
+    return {
+      id: user.id,
+      name: user.name,
+      profileImageUrl: user.profileImageUrl,
+      university: user.university,
+      _count: user._count,
+      viewCount
+    };
+  });
 }

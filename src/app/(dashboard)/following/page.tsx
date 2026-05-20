@@ -9,7 +9,7 @@ import Link from "next/link";
 export default async function FollowingPage() {
   const user = await getSessionUser();
   if (!user) {
-    redirect("/auth/login");
+    redirect("/login");
   }
 
   const [feedPapers, stats, suggestions] = await Promise.all([
@@ -43,7 +43,7 @@ export default async function FollowingPage() {
     avatarUrl: s.profileImageUrl || undefined,
     institution: s.university?.name || "Research Institution",
     thesisCount: s._count.papers,
-    viewCount: Math.floor(Math.random() * 5000), // Placeholder as it's not in the simple count
+    viewCount: s.viewCount || 0,
   }));
 
   return (

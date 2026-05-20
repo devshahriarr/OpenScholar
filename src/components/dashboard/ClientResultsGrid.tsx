@@ -22,8 +22,10 @@ export default function ClientResultsGrid({ searchParamsStr }: { searchParamsStr
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
+    Promise.resolve().then(() => {
+      setIsLoading(true);
+      setError(null);
+    });
     
     fetch(`/api/search?${searchParamsStr}`)
       .then(async res => {

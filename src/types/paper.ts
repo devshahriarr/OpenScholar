@@ -12,6 +12,7 @@ export interface Paper {
   abstract: string;
   tags: string[];
   views: number;
+  downloads?: number;
   comments: number;
   publishedAt: string;
 }

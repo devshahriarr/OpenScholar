@@ -3,15 +3,15 @@ import { BookOpen } from "lucide-react";
 
 const footerLinks = {
   Platform: [
-    { label: "Dashboard", href: "/dashboard" },
+    { label: "Dashboard", href: "/search" },
     { label: "Features", href: "#methodology" },
     { label: "Methodology", href: "#methodology" },
   ],
   Resources: [
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
-    { label: "Support", href: "/support" },
-    { label: "Contact", href: "/contact" },
+    { label: "Privacy Policy", href: "#" },
+    { label: "Terms of Service", href: "#" },
+    { label: "Support", href: "#" },
+    { label: "Contact", href: "#" },
   ],
 };
 
@@ -27,7 +27,7 @@ export default function Footer() {
                 <BookOpen className="h-3.5 w-3.5 text-white" />
               </div>
               <div className="leading-tight">
-                <p className="text-sm font-semibold text-text-primary">Research Portal</p>
+                <p className="text-sm font-semibold text-text-primary">OpenScholar</p>
                 <p className="text-[10px] text-text-secondary">Academic Excellence</p>
               </div>
             </Link>
@@ -59,10 +59,11 @@ export default function Footer() {
 
         <div className="mt-10 border-t border-border pt-6">
           <p className="text-xs text-text-secondary text-center">
-            © {new Date().getFullYear()} Research Portal. Academic Research Platform.
+            © {new Date().getFullYear()} OpenScholar. Academic Research Platform.
           </p>
         </div>
       </div>
     </footer>
   );
 }
+

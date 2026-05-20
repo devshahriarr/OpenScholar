@@ -1,8 +1,44 @@
+"use client";
+
 import { Eye, Download, MessageSquare, Heart, Bookmark, FileText, Calendar } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export function PaperCard({ paper }: { paper: any }) {
   const version = paper.versions?.[0];
+  const [isSaved, setIsSaved] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname === "/saved") {
+      setIsSaved(true);
+    }
+  }, []);
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const res = await fetch("/api/engagement/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paperId: paper.id }),
+      });
+
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      if (res.ok) {
+        setIsSaved(!isSaved);
+      }
+    } catch (error) {
+      console.error("Failed to save paper:", error);
+    }
+  };
 
   return (
     <div className="card-premium overflow-hidden group">
@@ -14,8 +50,13 @@ export function PaperCard({ paper }: { paper: any }) {
           <span className="bg-primary-light text-primary text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">
             {paper.category?.name || "General"}
           </span>
-          <button className="text-text-muted hover:text-secondary transition-colors">
-            <Bookmark size={20} />
+          <button 
+            onClick={handleSave}
+            className={`transition-all hover:scale-110 active:scale-95 ${
+              isSaved ? "text-yellow-400" : "text-text-muted hover:text-secondary"
+            }`}
+          >
+            <Bookmark size={20} className={isSaved ? "fill-current" : ""} />
           </button>
         </div>
 

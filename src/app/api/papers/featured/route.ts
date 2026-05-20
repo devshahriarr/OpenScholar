@@ -21,7 +21,7 @@ export async function GET() {
           },
         },
         category: { select: { name: true } },
-        metrics: { select: { viewCount: true } },
+        metrics: { select: { viewCount: true, downloadCount: true } },
         _count: { select: { comments: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -37,6 +37,7 @@ export async function GET() {
         category: p.category?.name ?? "Uncategorized",
         tags: v?.keywords ?? [],
         views: p.metrics?.viewCount ?? 0,
+        downloads: p.metrics?.downloadCount ?? 0,
         comments: p._count.comments,
         publishedAt: p.createdAt.toISOString(),
         author: {

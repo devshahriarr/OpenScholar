@@ -54,7 +54,9 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchData();
+    Promise.resolve().then(() => {
+      fetchData();
+    });
   }, []);
 
   const handleModerate = async (paperId: string, action: "approved" | "rejected") => {

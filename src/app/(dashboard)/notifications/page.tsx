@@ -65,7 +65,9 @@ export default function NotificationsPage() {
   }, []);
 
   useEffect(() => {
-    fetchNotifications(page);
+    Promise.resolve().then(() => {
+      fetchNotifications(page);
+    });
   }, [page, fetchNotifications]);
 
   const handleMarkRead = async (id: string) => {
@@ -132,8 +134,8 @@ export default function NotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Bell className="w-12 h-12 text-text-muted opacity-30 mb-4" />
-            <p className="text-lg font-bold text-text-primary">You're all caught up!</p>
-            <p className="text-sm text-text-secondary mt-1">No notifications yet. We'll let you know when something happens.</p>
+            <p className="text-lg font-bold text-text-primary">You&apos;re all caught up!</p>
+            <p className="text-sm text-text-secondary mt-1">No notifications yet. We&apos;ll let you know when something happens.</p>
           </div>
         ) : (
           <div className="divide-y divide-border">

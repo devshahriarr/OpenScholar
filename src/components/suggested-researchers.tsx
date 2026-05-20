@@ -2,6 +2,7 @@
 
 import { UserPlus, Loader2 } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 interface Researcher {
   id: string;
@@ -58,7 +59,7 @@ export function SuggestedResearchers({ researchers = [] }: { researchers?: Resea
             return (
               <div key={person.id} className="group">
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-3">
+                  <Link href={`/users/${person.id}`} className="flex items-center gap-3">
                     {person.avatarUrl ? (
                       <img src={person.avatarUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover" />
                     ) : (
@@ -72,7 +73,7 @@ export function SuggestedResearchers({ researchers = [] }: { researchers?: Resea
                       </h3>
                       <p className="text-[10px] text-text-secondary leading-none mt-1">{person.institution}</p>
                     </div>
-                  </div>
+                  </Link>
                 </div>
                 
                 <div className="flex items-center justify-between text-[10px] font-medium text-text-secondary px-1">
@@ -98,9 +99,11 @@ export function SuggestedResearchers({ researchers = [] }: { researchers?: Resea
         </div>
       )}
 
-      <button className="w-full mt-8 py-2.5 border border-gray-100 rounded-xl text-xs font-bold text-text-secondary hover:bg-gray-50 transition-colors">
-        View More
-      </button>
+      <Link href="/search" className="block w-full">
+        <button className="w-full mt-8 py-2.5 border border-gray-100 rounded-xl text-xs font-bold text-text-secondary hover:bg-gray-50 transition-colors">
+          View More
+        </button>
+      </Link>
     </div>
   );
 }

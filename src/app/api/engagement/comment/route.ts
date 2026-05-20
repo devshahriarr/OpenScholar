@@ -23,7 +23,17 @@ export async function POST(request: Request) {
     }
 
     const comment = await addComment(user.sub, paperId, content, parentId);
-    return NextResponse.json(comment);
+    const formattedComment = {
+      id: comment.id,
+      user: {
+        id: comment.user.id,
+        name: comment.user.name,
+        avatarUrl: comment.user.profileImageUrl || undefined,
+      },
+      content: comment.content,
+      createdAt: comment.createdAt.toISOString(),
+    };
+    return NextResponse.json(formattedComment);
   } catch (error) {
     console.error("[ENGAGEMENT_COMMENT]", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
